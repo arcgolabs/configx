@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/DaiYuANg/arcgo/observabilityx"
+	"github.com/arcgolabs/observabilityx"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/v2"
 	"github.com/samber/lo"

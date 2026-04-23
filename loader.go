@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/DaiYuANg/arcgo/observabilityx"
+	"github.com/arcgolabs/observabilityx"
 	"github.com/samber/mo"
 	"github.com/samber/oops"
 )

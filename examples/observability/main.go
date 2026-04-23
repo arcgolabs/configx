@@ -7,9 +7,9 @@ import (
 	"github.com/DaiYuANg/arcgo/httpx"
 	"github.com/DaiYuANg/arcgo/httpx/adapter"
 	"github.com/DaiYuANg/arcgo/httpx/adapter/std"
-	"github.com/DaiYuANg/arcgo/observabilityx"
-	otelobs "github.com/DaiYuANg/arcgo/observabilityx/otel"
-	promobs "github.com/DaiYuANg/arcgo/observabilityx/prometheus"
+	"github.com/arcgolabs/observabilityx"
+	otelobs "github.com/arcgolabs/observabilityx/otel"
+	promobs "github.com/arcgolabs/observabilityx/prometheus"
 	"github.com/arcgolabs/configx"
 )
 

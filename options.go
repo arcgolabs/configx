@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DaiYuANg/arcgo/observabilityx"
+	"github.com/arcgolabs/observabilityx"
 	"github.com/go-playground/validator/v10"
 	"github.com/samber/lo"
 	"github.com/samber/mo"

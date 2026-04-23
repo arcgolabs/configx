@@ -5,8 +5,8 @@ go 1.26.2
 require (
 	github.com/DaiYuANg/arcgo/httpx v0.2.6
 	github.com/DaiYuANg/arcgo/httpx/adapter/std v0.1.5
-	github.com/DaiYuANg/arcgo/observabilityx v0.2.2
 	github.com/arcgolabs/configx v0.0.0
+	github.com/arcgolabs/observabilityx v0.2.0
 )
 
 require (
@@ -38,6 +38,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/knadh/koanf/maps v0.1.2 // indirect
 	github.com/knadh/koanf/parsers/json v1.0.0 // indirect
 	github.com/knadh/koanf/parsers/toml/v2 v2.2.0 // indirect

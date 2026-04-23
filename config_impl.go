@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/DaiYuANg/arcgo/collectionx"
+	"github.com/arcgolabs/collectionx"
 	"github.com/go-playground/validator/v10"
 	"github.com/knadh/koanf/v2"
 	"github.com/samber/oops"

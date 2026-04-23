@@ -12,7 +12,7 @@ weight: 2
 ## 1) Install
 
 ```bash
-go get github.com/DaiYuANg/arcgo/configx@latest
+go get github.com/arcgolabs/configx@latest
 ```
 
 ## 2) Create `main.go`
@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/DaiYuANg/arcgo/configx"
+	"github.com/arcgolabs/configx"
 )
 
 type AppConfig struct {
@@ -53,7 +53,7 @@ func main() {
 
 ```bash
 go mod init example.com/configx-hello
-go get github.com/DaiYuANg/arcgo/configx@latest
+go get github.com/arcgolabs/configx@latest
 go run .
 ```
 

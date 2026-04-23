@@ -1,6 +1,6 @@
 package configx
 
-import "github.com/DaiYuANg/arcgo/pkg/option"
+import "github.com/arcgolabs/pkg/option"
 
 func buildOptions(opts ...Option) *Options {
 	options := NewOptions()

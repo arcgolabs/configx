@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	pkgfx "github.com/DaiYuANg/arcgo/pkg/fx"
+	pkgfx "github.com/arcgolabs/pkg/fx"
 	"go.uber.org/fx"
 
 	"github.com/arcgolabs/configx"

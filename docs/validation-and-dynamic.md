@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/DaiYuANg/arcgo/configx"
+	"github.com/arcgolabs/configx"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -55,7 +55,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/DaiYuANg/arcgo/configx"
+	"github.com/arcgolabs/configx"
 )
 
 func main() {
@@ -84,7 +84,7 @@ func main() {
 
 ## Observability hook-in
 
-To emit load metrics through `observabilityx`, use `WithObservability`. A runnable sample lives in the repository: [configx/examples/observability](https://github.com/DaiYuANg/arcgo/tree/main/configx/examples/observability).
+To emit load metrics through `observabilityx`, use `WithObservability`. A runnable sample lives in the repository: [configx/examples/observability](https://github.com/arcgolabs/configx/tree/main/examples/observability).
 
 ## Related
 

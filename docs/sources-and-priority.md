@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/DaiYuANg/arcgo/configx"
+	"github.com/arcgolabs/configx"
 )
 
 type AppConfig struct {
@@ -64,7 +64,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/DaiYuANg/arcgo/configx"
+	"github.com/arcgolabs/configx"
 )
 
 type AppConfig struct {
@@ -113,7 +113,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/DaiYuANg/arcgo/configx"
+	"github.com/arcgolabs/configx"
 )
 
 type AppConfig struct {
@@ -168,7 +168,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/DaiYuANg/arcgo/configx"
+	"github.com/arcgolabs/configx"
 )
 
 type AppConfig struct {
@@ -225,7 +225,7 @@ package main
 import (
 	"log"
 
-	"github.com/DaiYuANg/arcgo/configx"
+	"github.com/arcgolabs/configx"
 	"github.com/spf13/pflag"
 )
 

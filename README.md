@@ -38,7 +38,7 @@ Sources are merged by priority. Later sources override earlier ones. The default
 ## Install / Import
 
 ```bash
-go get github.com/DaiYuANg/arcgo/configx@latest
+go get github.com/arcgolabs/configx@latest
 ```
 
 ## Key API surface (summary)
@@ -58,4 +58,4 @@ go get github.com/DaiYuANg/arcgo/configx@latest
 
 ## Examples (repository)
 
-- [configx/examples/observability](https://github.com/DaiYuANg/arcgo/tree/main/configx/examples/observability)
+- [configx/examples/observability](https://github.com/arcgolabs/configx/tree/main/examples/observability)

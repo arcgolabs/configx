@@ -4,7 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/arcgolabs/collectionx"
+	collectionlist "github.com/arcgolabs/collectionx/list"
+	collectionmap "github.com/arcgolabs/collectionx/mapping"
 	"github.com/go-playground/validator/v10"
 	"github.com/knadh/koanf/v2"
 	"github.com/samber/oops"
@@ -87,15 +88,15 @@ func (c *Config) GetDuration(path string) time.Duration {
 }
 
 // GetStringSlice retrieves related data.
-func (c *Config) GetStringSlice(path string) collectionx.List[string] {
+func (c *Config) GetStringSlice(path string) *collectionlist.List[string] {
 	items := c.k.Strings(path)
-	return collectionx.NewListWithCapacity(len(items), items...)
+	return collectionlist.NewListWithCapacity(len(items), items...)
 }
 
 // GetIntSlice retrieves related data.
-func (c *Config) GetIntSlice(path string) collectionx.List[int] {
+func (c *Config) GetIntSlice(path string) *collectionlist.List[int] {
 	items := c.k.Ints(path)
-	return collectionx.NewListWithCapacity(len(items), items...)
+	return collectionlist.NewListWithCapacity(len(items), items...)
 }
 
 // Unmarshal documents related behavior.
@@ -141,8 +142,8 @@ func (c *Config) Exists(path string) bool {
 }
 
 // All retrieves related data.
-func (c *Config) All() collectionx.Map[string, any] {
-	return collectionx.NewMapFrom(c.k.All())
+func (c *Config) All() *collectionmap.Map[string, any] {
+	return collectionmap.NewMapFrom(c.k.All())
 }
 
 // Validate documents related behavior.
@@ -162,14 +163,14 @@ func (c *Config) Validate(out any) error {
 
 // ConfigSnapshot provides a deterministic, inspectable view of loaded values.
 type ConfigSnapshot struct {
-	Values collectionx.Map[string, any]
-	Keys   collectionx.List[string]
+	Values *collectionmap.Map[string, any]
+	Keys   *collectionlist.List[string]
 }
 
 // Snapshot returns a copy-like diagnostic view of config values and sorted keys.
 func (c *Config) Snapshot() ConfigSnapshot {
 	values := c.All()
-	keys := collectionx.NewListWithCapacity[string](values.Len())
+	keys := collectionlist.NewListWithCapacity[string](values.Len())
 	values.Range(func(key string, _ any) bool {
 		keys.Add(key)
 		return true

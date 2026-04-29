@@ -6,7 +6,7 @@ require (
 	github.com/DaiYuANg/arcgo/httpx v0.2.6
 	github.com/DaiYuANg/arcgo/httpx/adapter/std v0.1.5
 	github.com/arcgolabs/configx v0.0.0
-	github.com/arcgolabs/observabilityx v0.2.0
+	github.com/arcgolabs/observabilityx v0.3.0
 )
 
 require (
@@ -15,14 +15,9 @@ require (
 	github.com/DaiYuANg/arcgo/httpx/adapter/fiber v0.1.5 // indirect
 	github.com/DaiYuANg/arcgo/httpx/adapter/gin v0.1.5 // indirect
 	github.com/DaiYuANg/arcgo/pkg/option v0.0.2 // indirect
-	github.com/arcgolabs/collectionx v0.2.0 // indirect
-	github.com/arcgolabs/collectionx/internal v0.2.0 // indirect
-	github.com/arcgolabs/collectionx/interval v0.2.0 // indirect
-	github.com/arcgolabs/collectionx/list v0.2.0 // indirect
-	github.com/arcgolabs/collectionx/mapping v0.2.0 // indirect
-	github.com/arcgolabs/collectionx/prefix v0.2.0 // indirect
-	github.com/arcgolabs/collectionx/set v0.2.0 // indirect
-	github.com/arcgolabs/collectionx/tree v0.2.0 // indirect
+	github.com/arcgolabs/collectionx/internal v0.5.0 // indirect
+	github.com/arcgolabs/collectionx/list v0.5.0 // indirect
+	github.com/arcgolabs/collectionx/mapping v0.5.0 // indirect
 	github.com/arcgolabs/pkg/option v0.0.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

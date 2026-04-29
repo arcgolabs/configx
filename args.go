@@ -4,7 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/arcgolabs/collectionx"
+	collectionlist "github.com/arcgolabs/collectionx/list"
+	collectionmap "github.com/arcgolabs/collectionx/mapping"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/v2"
 	"github.com/samber/oops"
@@ -39,7 +40,7 @@ func loadArgs(k *koanf.Koanf, args []string, fs *pflag.FlagSet, nameFunc func(st
 		return nil
 	}
 
-	values := collectionx.NewMapWithCapacity[string, any](rawEntries.Len() + flagEntries.Len())
+	values := collectionmap.NewMapWithCapacity[string, any](rawEntries.Len() + flagEntries.Len())
 	if err := applyArgEntries(values, rawEntries, "args"); err != nil {
 		return err
 	}
@@ -61,9 +62,9 @@ func normalizeArgsNameFunc(nameFunc func(string) string) func(string) string {
 	return defaultArgsName
 }
 
-func parseRawArgs(args []string, nameFunc func(string) string) (collectionx.List[argEntry], error) {
-	tokens := collectionx.NewListWithCapacity[string](len(args), args...)
-	entries := collectionx.NewListWithCapacity[argEntry](tokens.Len())
+func parseRawArgs(args []string, nameFunc func(string) string) (*collectionlist.List[argEntry], error) {
+	tokens := collectionlist.NewListWithCapacity[string](len(args), args...)
+	entries := collectionlist.NewListWithCapacity[argEntry](tokens.Len())
 
 	for index := 0; index < tokens.Len(); index++ {
 		token, stop := rawArgToken(tokens, index)
@@ -87,7 +88,7 @@ func parseRawArgs(args []string, nameFunc func(string) string) (collectionx.List
 	return entries, nil
 }
 
-func rawArgToken(tokens collectionx.List[string], index int) (string, bool) {
+func rawArgToken(tokens *collectionlist.List[string], index int) (string, bool) {
 	token, ok := tokens.Get(index)
 	if !ok || token == "--" {
 		return "", true
@@ -99,7 +100,7 @@ func rawArgFlag(token string) bool {
 	return strings.HasPrefix(token, "--") && len(token) > 2
 }
 
-func parseRawArgEntry(tokens collectionx.List[string], index int, nameFunc func(string) string) (argEntry, bool, error) {
+func parseRawArgEntry(tokens *collectionlist.List[string], index int, nameFunc func(string) string) (argEntry, bool, error) {
 	token, ok := tokens.Get(index)
 	if !ok {
 		return argEntry{}, false, oops.In("configx").
@@ -134,12 +135,12 @@ func parseRawArgEntry(tokens collectionx.List[string], index int, nameFunc func(
 	}, consumedNext, nil
 }
 
-func changedFlagEntries(fs *pflag.FlagSet, nameFunc func(string) string) (collectionx.List[argEntry], error) {
+func changedFlagEntries(fs *pflag.FlagSet, nameFunc func(string) string) (*collectionlist.List[argEntry], error) {
 	if fs == nil {
-		return collectionx.NewList[argEntry](), nil
+		return collectionlist.NewList[argEntry](), nil
 	}
 
-	entries := collectionx.NewListWithCapacity[argEntry](changedFlagCount(fs))
+	entries := collectionlist.NewListWithCapacity[argEntry](changedFlagCount(fs))
 	var visitErr error
 	fs.Visit(func(flag *pflag.Flag) {
 		if visitErr != nil {
@@ -168,12 +169,12 @@ func changedFlagEntries(fs *pflag.FlagSet, nameFunc func(string) string) (collec
 	return entries, nil
 }
 
-func applyArgEntries(values collectionx.Map[string, any], entries collectionx.List[argEntry], sourceLabel string) error {
+func applyArgEntries(values *collectionmap.Map[string, any], entries *collectionlist.List[argEntry], sourceLabel string) error {
 	if values == nil || entries == nil || entries.IsEmpty() {
 		return nil
 	}
 
-	namesByPath := collectionx.NewMapWithCapacity[string, string](entries.Len())
+	namesByPath := collectionmap.NewMapWithCapacity[string, string](entries.Len())
 	var applyErr error
 	entries.Range(func(_ int, entry argEntry) bool {
 		if existing, ok := namesByPath.Get(entry.Path); ok && existing != entry.Name {

@@ -3,9 +3,9 @@ module github.com/arcgolabs/configx
 go 1.26.2
 
 require (
-	github.com/arcgolabs/collectionx/list v0.5.0
-	github.com/arcgolabs/collectionx/mapping v0.5.0
-	github.com/arcgolabs/observabilityx v0.3.0
+	github.com/arcgolabs/collectionx/list v0.7.0
+	github.com/arcgolabs/collectionx/mapping v0.7.0
+	github.com/arcgolabs/observabilityx v0.4.0
 	github.com/arcgolabs/pkg/option v0.0.3
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/joho/godotenv v1.5.1
@@ -24,7 +24,6 @@ require (
 )
 
 require (
-	github.com/arcgolabs/collectionx/internal v0.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect

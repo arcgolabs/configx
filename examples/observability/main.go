@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/DaiYuANg/arcgo/httpx"
-	"github.com/DaiYuANg/arcgo/httpx/adapter"
-	"github.com/DaiYuANg/arcgo/httpx/adapter/std"
+	"github.com/arcgolabs/httpx"
+	"github.com/arcgolabs/httpx/adapter"
+	"github.com/arcgolabs/httpx/adapter/std"
 	"github.com/arcgolabs/observabilityx"
 	otelobs "github.com/arcgolabs/observabilityx/otel"
 	promobs "github.com/arcgolabs/observabilityx/prometheus"

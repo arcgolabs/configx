@@ -3,21 +3,19 @@ module github.com/arcgolabs/configx/examples/observability
 go 1.26.2
 
 require (
-	github.com/DaiYuANg/arcgo/httpx v0.2.6
-	github.com/DaiYuANg/arcgo/httpx/adapter/std v0.1.5
 	github.com/arcgolabs/configx v0.0.0
-	github.com/arcgolabs/observabilityx v0.3.0
+	github.com/arcgolabs/httpx v0.1.2
+	github.com/arcgolabs/httpx/adapter/std v0.1.2
+	github.com/arcgolabs/observabilityx v0.4.0
 )
 
 require (
-	github.com/DaiYuANg/arcgo/collectionx v0.1.6 // indirect
-	github.com/DaiYuANg/arcgo/httpx/adapter/echo v0.1.5 // indirect
-	github.com/DaiYuANg/arcgo/httpx/adapter/fiber v0.1.5 // indirect
-	github.com/DaiYuANg/arcgo/httpx/adapter/gin v0.1.5 // indirect
-	github.com/DaiYuANg/arcgo/pkg/option v0.0.2 // indirect
-	github.com/arcgolabs/collectionx/internal v0.5.0 // indirect
-	github.com/arcgolabs/collectionx/list v0.5.0 // indirect
-	github.com/arcgolabs/collectionx/mapping v0.5.0 // indirect
+	github.com/arcgolabs/collectionx/list v0.7.0 // indirect
+	github.com/arcgolabs/collectionx/mapping v0.7.0 // indirect
+	github.com/arcgolabs/collectionx/set v0.7.0 // indirect
+	github.com/arcgolabs/httpx/adapter/echo v0.1.2 // indirect
+	github.com/arcgolabs/httpx/adapter/fiber v0.1.2 // indirect
+	github.com/arcgolabs/httpx/adapter/gin v0.1.2 // indirect
 	github.com/arcgolabs/pkg/option v0.0.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -33,7 +31,6 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
-	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/knadh/koanf/maps v0.1.2 // indirect
 	github.com/knadh/koanf/parsers/json v1.0.0 // indirect
 	github.com/knadh/koanf/parsers/toml/v2 v2.2.0 // indirect

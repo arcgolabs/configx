@@ -19,7 +19,7 @@ Sources are merged by priority. Later sources override earlier ones. The default
 ## Current capabilities
 
 - `.env` loading (`WithDotenv`, `WithIgnoreDotenvError`)
-- File loading (YAML/JSON/TOML) (`WithFiles`)
+- File loading via explicit format parser modules (`WithFiles` + `format/*`)
 - Custom in-memory/remote sources (`WithSource`, `WithSources`, `NewSource`)
 - Environment variables (`WithEnvPrefix`, `WithEnvSeparator`)
 - Command-line args and flags (`WithArgs`, `WithOSArgs`, `WithFlagSet`, `WithCommandLineFlags`, `WithArgsNameFunc`)
@@ -28,6 +28,20 @@ Sources are merged by priority. Later sources override earlier ones. The default
 - Optional validation (`WithValidateLevel`, `WithValidator`)
 - Optional observability (`WithObservability`)
 - Hot reload support via `Watcher` (`NewWatcher` / `Watch`)
+
+Example:
+
+```go
+import (
+	"github.com/arcgolabs/configx"
+	formatyaml "github.com/arcgolabs/configx/format/yaml"
+)
+
+cfg, err := configx.LoadConfig(
+	configx.WithFiles("config.yaml"),
+	formatyaml.WithYAMLSupport(),
+)
+```
 
 ## Documentation map
 

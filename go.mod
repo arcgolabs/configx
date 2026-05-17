@@ -9,9 +9,6 @@ require (
 	github.com/arcgolabs/pkg/option v0.0.3
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/joho/godotenv v1.5.1
-	github.com/knadh/koanf/parsers/json v1.0.0
-	github.com/knadh/koanf/parsers/toml/v2 v2.2.1
-	github.com/knadh/koanf/parsers/yaml v1.1.0
 	github.com/knadh/koanf/providers/confmap v1.0.0
 	github.com/knadh/koanf/providers/env/v2 v2.0.0
 	github.com/knadh/koanf/providers/file v1.2.1
@@ -36,7 +33,6 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/oklog/ulid/v2 v2.1.1 // indirect
-	github.com/pelletier/go-toml/v2 v2.3.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	go.opentelemetry.io/otel v1.43.0 // indirect

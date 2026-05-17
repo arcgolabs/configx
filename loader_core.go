@@ -166,7 +166,7 @@ func loadConfiguredSource(
 	case SourceFile:
 		logDebug(opts, "configx source loading", "source", src.String(), "files", len(opts.files))
 		if err := loadSourceWithObservability(ctx, obs, src, func() error {
-			return loadFiles(k, opts.files)
+			return loadFiles(k, opts.files, opts.fileParsers)
 		}); err != nil {
 			return oops.In("configx").
 				With("op", "load_source", "source", src.String(), "file_count", len(opts.files)).

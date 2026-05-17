@@ -3,8 +3,6 @@ package configx_test
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -14,21 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-// writeYAML writes content to path, failing the test on error.
-func writeYAML(t *testing.T, path, content string) {
+func withKVFileSupportForTests(t *testing.T, path string, opts ...configx.Option) []configx.Option {
 	t.Helper()
-	require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
-}
-
-// tempYAML creates a temp YAML config file and returns its path.
-func tempYAML(t *testing.T, content string) string {
-	t.Helper()
-	dir := t.TempDir()
-	path := filepath.Join(dir, "config.yaml")
-	writeYAML(t, path, content)
-	return path
+	return append([]configx.Option{
+		configx.WithFileParser(testConfigFileExtension, kvFileParser{}),
+	}, append(opts, configx.WithFiles(path))...)
 }
 
 // startWatcher starts w.Start in a background goroutine with a cancellable
@@ -66,12 +54,10 @@ func waitForChange(t *testing.T, ch <-chan *configx.Config, timeout time.Duratio
 	}
 }
 
-// ── construction ──────────────────────────────────────────────────────────────
-
 func TestNewWatcher_InitialLoad(t *testing.T) {
-	path := tempYAML(t, "name: arcgo\nport: 8080\n")
+	path := tempConfigFile(t, "name: arcgo\nport: 8080\n")
 
-	w, err := configx.NewWatcher(configx.WithFiles(path))
+	w, err := configx.NewWatcher(withKVFileSupportForTests(t, path)...)
 	require.NoError(t, err)
 
 	assert.Equal(t, "arcgo", w.Config().GetString("name"))
@@ -99,18 +85,15 @@ func TestNewWatcher_NoFiles_InitialConfigStillWorks(t *testing.T) {
 }
 
 func TestNewWatcher_BadFile_ReturnsError(t *testing.T) {
-	_, err := configx.NewWatcher(configx.WithFiles("/nonexistent/path/config.yaml"))
+	_, err := configx.NewWatcher(withKVFileSupportForTests(t, "/nonexistent/path/config.kv")...)
 	assert.Error(t, err)
 }
 
-// ── hot reload ────────────────────────────────────────────────────────────────
-
 func TestWatcher_HotReload_ValueChanges(t *testing.T) {
-	path := tempYAML(t, "name: before\nport: 1111\n")
+	path := tempConfigFile(t, "name: before\nport: 1111\n")
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(30*time.Millisecond),
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(30*time.Millisecond))...,
 	)
 	require.NoError(t, err)
 
@@ -121,7 +104,7 @@ func TestWatcher_HotReload_ValueChanges(t *testing.T) {
 	})
 
 	startWatcher(t, w)
-	writeYAML(t, path, "name: after\nport: 2222\n")
+	writeConfigFile(t, path, "name: after\nport: 2222\n")
 
 	newCfg := waitForChange(t, changed, 3*time.Second)
 	assert.Equal(t, "after", newCfg.GetString("name"))
@@ -130,11 +113,10 @@ func TestWatcher_HotReload_ValueChanges(t *testing.T) {
 }
 
 func TestWatcher_HotReload_MultipleReloads(t *testing.T) {
-	path := tempYAML(t, "version: 1\n")
+	path := tempConfigFile(t, "version: 1\n")
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(30*time.Millisecond),
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(30*time.Millisecond))...,
 	)
 	require.NoError(t, err)
 
@@ -148,7 +130,7 @@ func TestWatcher_HotReload_MultipleReloads(t *testing.T) {
 	startWatcher(t, w)
 
 	for i := range 3 {
-		writeYAML(t, path, fmt.Sprintf("version: %d\n", i+2))
+		writeConfigFile(t, path, fmt.Sprintf("version: %d\n", i+2))
 		time.Sleep(120 * time.Millisecond)
 	}
 
@@ -158,14 +140,11 @@ func TestWatcher_HotReload_MultipleReloads(t *testing.T) {
 	assert.Equal(t, 4, w.Config().GetInt("version"))
 }
 
-// ── debounce ──────────────────────────────────────────────────────────────────
-
 func TestWatcher_Debounce_CollapsesRapidWrites(t *testing.T) {
-	path := tempYAML(t, "counter: 0\n")
+	path := tempConfigFile(t, "counter: 0\n")
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(300*time.Millisecond),
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(300*time.Millisecond))...,
 	)
 	require.NoError(t, err)
 
@@ -179,7 +158,7 @@ func TestWatcher_Debounce_CollapsesRapidWrites(t *testing.T) {
 	startWatcher(t, w)
 
 	for i := 1; i <= 5; i++ {
-		writeYAML(t, path, fmt.Sprintf("counter: %d\n", i))
+		writeConfigFile(t, path, fmt.Sprintf("counter: %d\n", i))
 		time.Sleep(10 * time.Millisecond)
 	}
 

@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/arcgolabs/observabilityx"
 	"github.com/go-playground/validator/v10"
+	"github.com/knadh/koanf/v2"
 	"github.com/samber/lo"
 	"github.com/samber/mo"
 	"github.com/samber/oops"
@@ -26,7 +28,7 @@ type Source int
 const (
 	// SourceDotenv reads values from .env files via godotenv.
 	SourceDotenv Source = iota
-	// SourceFile reads values from YAML, JSON, or TOML files.
+	// SourceFile reads values from files using registered parser options.
 	SourceFile
 	// SourceEnv reads values from OS environment variables.
 	SourceEnv
@@ -117,6 +119,7 @@ type Options struct {
 	// nesting convention.
 	envSeparator    string
 	files           []string
+	fileParsers     map[string]koanf.Parser
 	priority        []Source
 	customSources   []ConfigSource
 	args            []string
@@ -202,10 +205,36 @@ func WithEnvSeparator(sep string) Option {
 }
 
 // WithFiles sets the config files to load. Supported formats: .yaml/.yml,
-// .json, .toml. Files are loaded in order; later files override earlier ones.
+// .json, .toml, etc. Parsing support is enabled via parser options like
+// WithFileParser / per-format support modules.
+//
+// Files are loaded in order; later files override earlier ones.
 // Files with unrecognized extensions return ErrUnsupportedFileFormat.
 func WithFiles(files ...string) Option {
 	return func(o *Options) { o.files = files }
+}
+
+// WithFileParser registers a parser for a file extension.
+// The extension may be provided with or without a leading dot and is matched
+// case-insensitively.
+//
+// Later registrations for the same extension override earlier ones.
+func WithFileParser(extension string, parser koanf.Parser) Option {
+	return func(o *Options) {
+		if parser == nil {
+			return
+		}
+
+		normalized := normalizeFileExtension(extension)
+		if normalized == "" {
+			return
+		}
+
+		if o.fileParsers == nil {
+			o.fileParsers = make(map[string]koanf.Parser)
+		}
+		o.fileParsers[normalized] = parser
+	}
 }
 
 // WithPriority overrides the source loading order. Sources listed later
@@ -329,6 +358,29 @@ func typedDefaultsToMap(v any) (map[string]any, error) {
 			Wrapf(ErrDefaults, "typed defaults must be an object-like value")
 	}
 	return out, nil
+}
+
+func normalizeFileExtension(ext string) string {
+	normalized := strings.ToLower(strings.TrimSpace(ext))
+	if normalized == "" {
+		return ""
+	}
+	if !strings.HasPrefix(normalized, ".") {
+		normalized = "." + normalized
+	}
+	return normalized
+}
+
+func supportedExtensions(fileParsers map[string]koanf.Parser) []string {
+	if len(fileParsers) == 0 {
+		return nil
+	}
+	extensions := make([]string, 0, len(fileParsers))
+	for ext := range fileParsers {
+		extensions = append(extensions, ext)
+	}
+	sort.Strings(extensions)
+	return extensions
 }
 
 func defaultArgsName(name string) string {

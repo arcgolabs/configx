@@ -13,11 +13,10 @@ import (
 )
 
 func TestWatcher_OnChange_NilHandlerIsIgnored(t *testing.T) {
-	path := tempYAML(t, "x: 1\n")
+	path := tempConfigFile(t, "x: 1\n")
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(30*time.Millisecond),
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(30*time.Millisecond))...,
 	)
 	require.NoError(t, err)
 
@@ -30,7 +29,7 @@ func TestWatcher_OnChange_NilHandlerIsIgnored(t *testing.T) {
 	})
 
 	startWatcher(t, w)
-	writeYAML(t, path, "x: 2\n")
+	writeConfigFile(t, path, "x: 2\n")
 
 	select {
 	case got := <-changed:
@@ -41,11 +40,10 @@ func TestWatcher_OnChange_NilHandlerIsIgnored(t *testing.T) {
 }
 
 func TestWatcher_OnChange_MultipleSubscribers(t *testing.T) {
-	path := tempYAML(t, "val: 10\n")
+	path := tempConfigFile(t, "val: 10\n")
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(30*time.Millisecond),
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(30*time.Millisecond))...,
 	)
 	require.NoError(t, err)
 
@@ -63,7 +61,7 @@ func TestWatcher_OnChange_MultipleSubscribers(t *testing.T) {
 	}
 
 	startWatcher(t, w)
-	writeYAML(t, path, "val: 99\n")
+	writeConfigFile(t, path, "val: 99\n")
 
 	for i, ch := range channels {
 		select {
@@ -76,11 +74,10 @@ func TestWatcher_OnChange_MultipleSubscribers(t *testing.T) {
 }
 
 func TestWatcher_OnChange_OrderIsPreserved(t *testing.T) {
-	path := tempYAML(t, "n: 0\n")
+	path := tempConfigFile(t, "n: 0\n")
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(30*time.Millisecond),
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(30*time.Millisecond))...,
 	)
 	require.NoError(t, err)
 
@@ -96,7 +93,7 @@ func TestWatcher_OnChange_OrderIsPreserved(t *testing.T) {
 	}
 
 	startWatcher(t, w)
-	writeYAML(t, path, "n: 1\n")
+	writeConfigFile(t, path, "n: 1\n")
 	time.Sleep(200 * time.Millisecond)
 
 	mu.Lock()
@@ -105,11 +102,10 @@ func TestWatcher_OnChange_OrderIsPreserved(t *testing.T) {
 }
 
 func TestWatcher_OnChange_RegisterDuringNotify_AppliesOnNextNotify(t *testing.T) {
-	path := tempYAML(t, "n: 1\n")
+	path := tempConfigFile(t, "n: 1\n")
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(30*time.Millisecond),
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(30*time.Millisecond))...,
 	)
 	require.NoError(t, err)
 
@@ -132,7 +128,7 @@ func TestWatcher_OnChange_RegisterDuringNotify_AppliesOnNextNotify(t *testing.T)
 	})
 
 	startWatcher(t, w)
-	writeYAML(t, path, "n: 2\n")
+	writeConfigFile(t, path, "n: 2\n")
 	time.Sleep(200 * time.Millisecond)
 
 	assert.True(t, registered)
@@ -142,7 +138,7 @@ func TestWatcher_OnChange_RegisterDuringNotify_AppliesOnNextNotify(t *testing.T)
 	default:
 	}
 
-	writeYAML(t, path, "n: 3\n")
+	writeConfigFile(t, path, "n: 3\n")
 	select {
 	case got := <-lateCalls:
 		assert.Equal(t, 3, got)
@@ -152,24 +148,22 @@ func TestWatcher_OnChange_RegisterDuringNotify_AppliesOnNextNotify(t *testing.T)
 }
 
 func TestWatcher_WatchErrHandler_CalledOnReloadError(t *testing.T) {
-	path := tempYAML(t, "ok: true\n")
+	path := tempConfigFile(t, "ok: true\n")
 
 	var handledErr atomic.Value
 	errCh := make(chan error, 1)
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(30*time.Millisecond),
-		configx.WithWatchErrHandler(func(e error) {
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(30*time.Millisecond), configx.WithWatchErrHandler(func(e error) {
 			if handledErr.CompareAndSwap(nil, e) {
 				errCh <- e
 			}
-		}),
+		}))...,
 	)
 	require.NoError(t, err)
 
 	startWatcher(t, w)
-	require.NoError(t, os.WriteFile(path, []byte(":\tinvalid: yaml: [\n"), 0o600))
+	require.NoError(t, os.WriteFile(path, []byte("invalid line\n"), 0o600))
 
 	select {
 	case e := <-errCh:
@@ -182,11 +176,10 @@ func TestWatcher_WatchErrHandler_CalledOnReloadError(t *testing.T) {
 }
 
 func TestWatcher_OnChange_CalledWithErrorOnReloadFailure(t *testing.T) {
-	path := tempYAML(t, "healthy: true\n")
+	path := tempConfigFile(t, "healthy: true\n")
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(30*time.Millisecond),
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(30*time.Millisecond))...,
 	)
 	require.NoError(t, err)
 
@@ -198,7 +191,7 @@ func TestWatcher_OnChange_CalledWithErrorOnReloadFailure(t *testing.T) {
 	})
 
 	startWatcher(t, w)
-	require.NoError(t, os.WriteFile(path, []byte(":\tinvalid: yaml: [\n"), 0o600))
+	require.NoError(t, os.WriteFile(path, []byte("invalid line\n"), 0o600))
 
 	select {
 	case e := <-errCh:

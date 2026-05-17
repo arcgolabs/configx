@@ -96,7 +96,7 @@ func newWatcherFromOptions(ctx context.Context, opts *Options) (*Watcher, error)
 
 	w := &Watcher{
 		opts:      opts,
-		providers: buildWatchProviders(opts.files),
+		providers: buildWatchProviders(opts.files, opts.fileParsers),
 		stopCh:    make(chan struct{}),
 	}
 	w.cfg.Store(cfg)

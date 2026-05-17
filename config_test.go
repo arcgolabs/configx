@@ -188,6 +188,18 @@ func TestWithIgnoreDotenvError_IgnoreParseError(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestWithFileParser_CustomExtension(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config"+testConfigFileExtension)
+	require.NoError(t, os.WriteFile(path, []byte("name: custom"), 0o600))
+
+	cfg, err := configx.LoadConfig(
+		configx.WithFileParser(testConfigFileExtension, kvFileParser{}),
+		configx.WithFiles(path),
+	)
+	require.NoError(t, err)
+	assert.Equal(t, "custom", cfg.GetString("name"))
+}
+
 func TestWithIgnoreDotenvError_StrictParseError(t *testing.T) {
 	envFile := filepath.Join(t.TempDir(), ".env")
 	writeErr := os.WriteFile(envFile, []byte("BROKEN='unclosed"), 0o600)
@@ -237,11 +249,12 @@ func TestFlagSetSource_ChangedFlagsOnly(t *testing.T) {
 }
 
 func TestCustomSource_DefaultPriority(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "config.yaml")
-	require.NoError(t, os.WriteFile(path, []byte("name: file-name\nport: 5000\n"), 0o600))
+	path := filepath.Join(t.TempDir(), "config"+testConfigFileExtension)
+	writeConfigFile(t, path, "name: file-name\nport: 5000\n")
 	t.Setenv("APP_PORT", "7000")
 
 	cfg, err := configx.LoadTErr[SimpleConfig](
+		configx.WithFileParser(testConfigFileExtension, kvFileParser{}),
 		configx.WithFiles(path),
 		configx.WithSources(configx.NewSource("remote", func(_ context.Context) (map[string]any, error) {
 			return map[string]any{

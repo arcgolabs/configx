@@ -13,6 +13,8 @@ var (
 	ErrValidate = errors.New("configx: validate")
 	// ErrDefaults indicates invalid default value configuration.
 	ErrDefaults = errors.New("configx: defaults")
+	// ErrUnsupportedFileFormat indicates a file extension with no registered parser.
+	ErrUnsupportedFileFormat = errors.New("configx: unsupported config file format")
 	// ErrSource indicates caller-provided source failures.
 	ErrSource = errors.New("configx: source")
 )

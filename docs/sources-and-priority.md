@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 
 	"github.com/arcgolabs/configx"
+	formatyaml "github.com/arcgolabs/configx/format/yaml"
 )
 
 type AppConfig struct {
@@ -42,6 +43,7 @@ func main() {
 	}
 
 	cfg, err := configx.LoadTErr[AppConfig](
+		formatyaml.WithYAMLSupport(),
 		configx.WithFiles(path),
 		configx.WithValidateLevel(configx.ValidateLevelStruct),
 	)
@@ -65,6 +67,7 @@ import (
 	"path/filepath"
 
 	"github.com/arcgolabs/configx"
+	formatyaml "github.com/arcgolabs/configx/format/yaml"
 )
 
 type AppConfig struct {
@@ -90,6 +93,7 @@ func main() {
 	defer func() { _ = os.Unsetenv("APP_PORT") }()
 
 	cfg, err := configx.LoadTErr[AppConfig](
+		formatyaml.WithYAMLSupport(),
 		configx.WithFiles(path),
 		configx.WithEnvPrefix("APP"),
 		configx.WithValidateLevel(configx.ValidateLevelStruct),
@@ -114,6 +118,7 @@ import (
 	"path/filepath"
 
 	"github.com/arcgolabs/configx"
+	formatyaml "github.com/arcgolabs/configx/format/yaml"
 )
 
 type AppConfig struct {
@@ -139,6 +144,7 @@ func main() {
 	defer func() { _ = os.Unsetenv("APP_PORT") }()
 
 	cfg, err := configx.LoadTErr[AppConfig](
+		formatyaml.WithYAMLSupport(),
 		configx.WithFiles(path),
 		configx.WithEnvPrefix("APP"),
 		configx.WithPriority(configx.SourceFile, configx.SourceEnv),
@@ -210,6 +216,7 @@ import (
 	"path/filepath"
 
 	"github.com/arcgolabs/configx"
+	formatyaml "github.com/arcgolabs/configx/format/yaml"
 )
 
 type AppConfig struct {
@@ -235,6 +242,7 @@ func main() {
 	defer func() { _ = os.Unsetenv("APP_PORT") }()
 
 	cfg, err := configx.LoadTErr[AppConfig](
+		formatyaml.WithYAMLSupport(),
 		configx.WithFiles(path),
 		configx.WithEnvPrefix("APP"),
 		configx.WithArgs("--name=from-cli", "--port", "6000"),

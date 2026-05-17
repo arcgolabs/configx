@@ -17,11 +17,10 @@ import (
 )
 
 func TestWatcher_Close_StopsReloads(t *testing.T) {
-	path := tempYAML(t, "active: true\n")
+	path := tempConfigFile(t, "active: true\n")
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(30*time.Millisecond),
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(30*time.Millisecond))...,
 	)
 	require.NoError(t, err)
 
@@ -53,7 +52,7 @@ func TestWatcher_Close_StopsReloads(t *testing.T) {
 		t.Fatal("timed out waiting for watcher shutdown")
 	}
 
-	writeYAML(t, path, "active: false\n")
+	writeConfigFile(t, path, "active: false\n")
 	time.Sleep(200 * time.Millisecond)
 
 	assert.EqualValues(t, 0, reloadCount.Load())
@@ -68,9 +67,9 @@ func TestWatcher_Close_IsIdempotent(t *testing.T) {
 }
 
 func TestWatcher_Start_ReturnsWhenContextCancelled(t *testing.T) {
-	path := tempYAML(t, "x: 1\n")
+	path := tempConfigFile(t, "x: 1\n")
 
-	w, err := configx.NewWatcher(configx.WithFiles(path))
+	w, err := configx.NewWatcher(withKVFileSupportForTests(t, path)...)
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithTimeout(t.Context(), 100*time.Millisecond)
@@ -131,11 +130,10 @@ func TestNewWatcher_UnsupportedFileFormat_ReturnsError(t *testing.T) {
 }
 
 func TestWatcher_ConcurrentConfigReads(t *testing.T) {
-	path := tempYAML(t, "counter: 0\n")
+	path := tempConfigFile(t, "counter: 0\n")
 
 	w, err := configx.NewWatcher(
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(20*time.Millisecond),
+		withKVFileSupportForTests(t, path, configx.WithWatchDebounce(20*time.Millisecond))...,
 	)
 	require.NoError(t, err)
 
@@ -146,7 +144,7 @@ func TestWatcher_ConcurrentConfigReads(t *testing.T) {
 
 	wg.Go(func() {
 		for i := 1; i <= 5; i++ {
-			writeYAML(t, path, fmt.Sprintf("counter: %d\n", i))
+			writeConfigFile(t, path, fmt.Sprintf("counter: %d\n", i))
 			time.Sleep(80 * time.Millisecond)
 		}
 	})
@@ -170,11 +168,9 @@ func TestWatcherT_HotReload_TypedValueChanges(t *testing.T) {
 		Port int    `validate:"gte=1"`
 	}
 
-	path := tempYAML(t, "name: before\nport: 1111\n")
+	path := tempConfigFile(t, "name: before\nport: 1111\n")
 	w, err := configx.NewWatcherT[typedCfg](
-		configx.WithFiles(path),
-		configx.WithWatchDebounce(30*time.Millisecond),
-		configx.WithValidateLevel(configx.ValidateLevelStruct),
+		append(withKVFileSupportForTests(t, path), configx.WithWatchDebounce(30*time.Millisecond), configx.WithValidateLevel(configx.ValidateLevelStruct))...,
 	)
 	require.NoError(t, err)
 
@@ -201,7 +197,7 @@ func TestWatcherT_HotReload_TypedValueChanges(t *testing.T) {
 	}()
 	time.Sleep(50 * time.Millisecond)
 
-	writeYAML(t, path, "name: after\nport: 2222\n")
+	writeConfigFile(t, path, "name: after\nport: 2222\n")
 	select {
 	case got := <-changed:
 		assert.Equal(t, "after", got.Name)

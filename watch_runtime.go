@@ -2,11 +2,11 @@ package configx
 
 import (
 	"context"
-	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/v2"
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 )
@@ -180,14 +180,12 @@ func (w *Watcher) loadSubscribers() []ChangeHandler {
 // buildWatchProviders creates one *file.File provider per supported config
 // file path. These providers are used exclusively for change detection;
 // loadConfigFromOptions handles the actual reading and parsing.
-func buildWatchProviders(paths []string) []*file.File {
+func buildWatchProviders(paths []string, parserRegistry map[string]koanf.Parser) []*file.File {
 	return lo.FilterMap(paths, func(path string, _ int) (*file.File, bool) {
-		switch filepath.Ext(path) {
-		case ".yaml", ".yml", ".json", ".toml":
-			return file.Provider(path), true
-		default:
+		if parserFor(path, parserRegistry) == nil {
 			return nil, false
 		}
+		return file.Provider(path), true
 	})
 }
 
@@ -198,13 +196,13 @@ func (w *Watcher) providerPath(index int) string {
 
 	current := 0
 	for _, path := range w.opts.files {
-		switch filepath.Ext(path) {
-		case ".yaml", ".yml", ".json", ".toml":
-			if current == index {
-				return path
-			}
-			current++
+		if parserFor(path, w.opts.fileParsers) == nil {
+			continue
 		}
+		if current == index {
+			return path
+		}
+		current++
 	}
 
 	return ""

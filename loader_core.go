@@ -21,6 +21,7 @@ func loadConfigFromOptions(ctx context.Context, opts *Options) (_ *Config, err e
 		"configx load started",
 		"files", len(opts.files),
 		"dotenv_files", len(opts.dotenvFiles),
+		"custom_sources", len(opts.customSources),
 		"priority", len(opts.priority),
 		"env_prefix", opts.envPrefix,
 		"raw_args", len(opts.args),
@@ -184,6 +185,15 @@ func loadConfiguredSource(
 		}
 		logDebug(opts, "configx source loaded", "source", src.String())
 
+	case SourceCustom:
+		logDebug(opts, "configx source loading", "source", src.String(), "custom_sources", len(opts.customSources))
+		if err := loadCustomSources(ctx, obs, k, opts); err != nil {
+			return oops.In("configx").
+				With("op", "load_source", "source", src.String(), "custom_source_count", len(opts.customSources)).
+				Wrapf(errors.Join(ErrLoad, err), "custom source")
+		}
+		logDebug(opts, "configx source loaded", "source", src.String())
+
 	case SourceArgs:
 		logDebug(opts,
 			"configx source loading",
@@ -212,11 +222,19 @@ func loadSourceWithObservability(
 	source Source,
 	fn func() error,
 ) error {
+	return loadNamedSourceWithObservability(ctx, obs, source.String(), fn)
+}
+
+func loadNamedSourceWithObservability(
+	ctx context.Context,
+	obs observabilityx.Observability,
+	sourceName string,
+	fn func() error,
+) error {
 	if fn == nil {
 		return nil
 	}
 
-	sourceName := source.String()
 	sourceCtx, sourceSpan := obs.StartSpan(ctx, "configx.load."+sourceName,
 		observabilityx.String("source", sourceName),
 	)

@@ -3,6 +3,8 @@
 package configx_test
 
 import (
+	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -232,6 +234,74 @@ func TestFlagSetSource_ChangedFlagsOnly(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "cli-name", cfg.Name)
 	assert.Equal(t, 8080, cfg.Port)
+}
+
+func TestCustomSource_DefaultPriority(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	require.NoError(t, os.WriteFile(path, []byte("name: file-name\nport: 5000\n"), 0o600))
+	t.Setenv("APP_PORT", "7000")
+
+	cfg, err := configx.LoadTErr[SimpleConfig](
+		configx.WithFiles(path),
+		configx.WithSources(configx.NewSource("remote", func(_ context.Context) (map[string]any, error) {
+			return map[string]any{
+				"name": "custom-name",
+				"port": 6000,
+			}, nil
+		})),
+		configx.WithEnvPrefix("APP"),
+	)
+	require.NoError(t, err)
+	assert.Equal(t, "custom-name", cfg.Name)
+	assert.Equal(t, 7000, cfg.Port)
+}
+
+func TestCustomSource_WithPriority(t *testing.T) {
+	t.Setenv("APP_PORT", "7000")
+
+	cfg, err := configx.LoadTErr[SimpleConfig](
+		configx.WithSource("remote", func(_ context.Context) (map[string]any, error) {
+			return map[string]any{
+				"name": "custom-name",
+				"port": 6000,
+			}, nil
+		}),
+		configx.WithEnvPrefix("APP"),
+		configx.WithPriority(configx.SourceEnv, configx.SourceCustom),
+	)
+	require.NoError(t, err)
+	assert.Equal(t, "custom-name", cfg.Name)
+	assert.Equal(t, 6000, cfg.Port)
+}
+
+func TestCustomSource_Error(t *testing.T) {
+	boom := errors.New("boom")
+
+	_, err := configx.LoadConfig(
+		configx.WithSource("broken", func(_ context.Context) (map[string]any, error) {
+			return nil, boom
+		}),
+	)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, configx.ErrSource)
+	assert.ErrorIs(t, err, boom)
+}
+
+func TestCustomSource_ContextCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	called := false
+
+	_, err := configx.LoadConfigContext(ctx,
+		configx.WithSource("remote", func(_ context.Context) (map[string]any, error) {
+			called = true
+			return nil, nil
+		}),
+	)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, configx.ErrSource)
+	assert.ErrorIs(t, err, context.Canceled)
+	assert.False(t, called)
 }
 
 func TestFlagSetSource_DefaultNameMapping(t *testing.T) {

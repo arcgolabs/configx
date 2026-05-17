@@ -13,4 +13,6 @@ var (
 	ErrValidate = errors.New("configx: validate")
 	// ErrDefaults indicates invalid default value configuration.
 	ErrDefaults = errors.New("configx: defaults")
+	// ErrSource indicates caller-provided source failures.
+	ErrSource = errors.New("configx: source")
 )

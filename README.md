@@ -14,12 +14,13 @@ It provides two main usage styles:
 - **Typed load** — `LoadT[T]` / `LoadTErr[T]` unmarshals into a struct and (optionally) validates it.
 - **Dynamic config** — `LoadConfig` returns `*configx.Config` for path-based access (`GetString`, `Exists`, `All`, `Unmarshal`).
 
-Sources are merged by priority. Later sources override earlier ones. The default order is `dotenv → file → env → args`.
+Sources are merged by priority. Later sources override earlier ones. The default order is `dotenv → file → custom → env → args`.
 
 ## Current capabilities
 
 - `.env` loading (`WithDotenv`, `WithIgnoreDotenvError`)
 - File loading (YAML/JSON/TOML) (`WithFiles`)
+- Custom in-memory/remote sources (`WithSource`, `WithSources`, `NewSource`)
 - Environment variables (`WithEnvPrefix`, `WithEnvSeparator`)
 - Command-line args and flags (`WithArgs`, `WithOSArgs`, `WithFlagSet`, `WithCommandLineFlags`, `WithArgsNameFunc`)
 - Explicit source priority (`WithPriority`)
@@ -44,6 +45,7 @@ go get github.com/arcgolabs/configx@latest
 ## Key API surface (summary)
 
 - `Load(out, opts...)` — load into an existing struct pointer
+- `LoadContext(ctx, out, opts...)` — load with context-aware custom sources
 - `LoadT[T](opts...)` / `LoadTErr[T](opts...)` — typed load helpers
 - `LoadConfig(opts...)` — return `*Config` for dynamic access
 - `New(opts...)` / `NewT[T](opts...)` — build reusable loaders

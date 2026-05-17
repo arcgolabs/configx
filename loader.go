@@ -65,7 +65,13 @@ func New(opts ...Option) *Loader {
 // Load reads all configured sources, unmarshals the result into out, and runs
 // struct validation according to the configured ValidateLevel.
 func (l *Loader) Load(out any) error {
-	cfg, err := l.loadInternal()
+	return l.LoadContext(context.Background(), out)
+}
+
+// LoadContext is like [Loader.Load], but passes ctx to caller-provided custom
+// sources.
+func (l *Loader) LoadContext(ctx context.Context, out any) error {
+	cfg, err := l.loadInternal(ctx)
 	if err != nil {
 		return oops.In("configx").
 			With("op", "load").
@@ -87,7 +93,13 @@ func (l *Loader) Load(out any) error {
 // LoadConfig reads all configured sources and returns a *Config for ad-hoc
 // path-based access (GetString, GetInt, Unmarshal, …).
 func (l *Loader) LoadConfig() (*Config, error) {
-	return l.loadInternal()
+	return l.LoadConfigContext(context.Background())
+}
+
+// LoadConfigContext is like [Loader.LoadConfig], but passes ctx to
+// caller-provided custom sources.
+func (l *Loader) LoadConfigContext(ctx context.Context) (*Config, error) {
+	return l.loadInternal(ctx)
 }
 
 // NewWatcher performs the initial load and returns a *Watcher that will
@@ -113,8 +125,8 @@ func (l *Loader) Watch(ctx context.Context, onChange ChangeHandler) error {
 	return w.Start(ctx)
 }
 
-func (l *Loader) loadInternal() (*Config, error) {
-	return loadConfigFromOptions(context.Background(), l.opts)
+func (l *Loader) loadInternal(ctx context.Context) (*Config, error) {
+	return loadConfigFromOptions(ctx, l.opts)
 }
 
 // ─── LoaderT ──────────────────────────────────────────────────────────────────
@@ -142,7 +154,13 @@ func NewT[T any](opts ...Option) *LoaderT[T] {
 // Load reads all configured sources, unmarshals the result into a new T, runs
 // struct validation, and returns the value wrapped in a [mo.Result].
 func (l *LoaderT[T]) Load() mo.Result[T] {
-	cfg, err := l.loadInternal()
+	return l.LoadContext(context.Background())
+}
+
+// LoadContext is like [LoaderT.Load], but passes ctx to caller-provided custom
+// sources.
+func (l *LoaderT[T]) LoadContext(ctx context.Context) mo.Result[T] {
+	cfg, err := l.loadInternal(ctx)
 	if err != nil {
 		return mo.Err[T](err)
 	}
@@ -164,7 +182,13 @@ func (l *LoaderT[T]) Load() mo.Result[T] {
 // LoadConfig reads all configured sources and returns a raw *Config for
 // path-based access.
 func (l *LoaderT[T]) LoadConfig() (*Config, error) {
-	return l.loadInternal()
+	return l.LoadConfigContext(context.Background())
+}
+
+// LoadConfigContext is like [LoaderT.LoadConfig], but passes ctx to
+// caller-provided custom sources.
+func (l *LoaderT[T]) LoadConfigContext(ctx context.Context) (*Config, error) {
+	return l.loadInternal(ctx)
 }
 
 // NewWatcher performs the initial load and returns a *Watcher that will
@@ -207,8 +231,8 @@ func (l *LoaderT[T]) WatchT(ctx context.Context, onChange ChangeHandlerT[T]) err
 	return w.Start(ctx)
 }
 
-func (l *LoaderT[T]) loadInternal() (*Config, error) {
-	return loadConfigFromOptions(context.Background(), l.opts)
+func (l *LoaderT[T]) loadInternal(ctx context.Context) (*Config, error) {
+	return loadConfigFromOptions(ctx, l.opts)
 }
 
 // ─── package-level helpers ────────────────────────────────────────────────────
@@ -222,19 +246,37 @@ func (l *LoaderT[T]) loadInternal() (*Config, error) {
 //	    configx.WithEnvPrefix("APP"),
 //	); err != nil { … }
 func Load(out any, opts ...Option) error {
-	return New(opts...).Load(out)
+	return LoadContext(context.Background(), out, opts...)
+}
+
+// LoadContext is a one-shot helper like [Load], but passes ctx to
+// caller-provided custom sources.
+func LoadContext(ctx context.Context, out any, opts ...Option) error {
+	return New(opts...).LoadContext(ctx, out)
 }
 
 // LoadT is a one-shot helper that returns the typed config wrapped in a
 // [mo.Result].
 func LoadT[T any](opts ...Option) mo.Result[T] {
-	return NewT[T](opts...).Load()
+	return LoadTContext[T](context.Background(), opts...)
+}
+
+// LoadTContext is a one-shot helper like [LoadT], but passes ctx to
+// caller-provided custom sources.
+func LoadTContext[T any](ctx context.Context, opts ...Option) mo.Result[T] {
+	return NewT[T](opts...).LoadContext(ctx)
 }
 
 // LoadTErr is a one-shot helper that returns the typed config as a plain
 // (value, error) pair.
 func LoadTErr[T any](opts ...Option) (T, error) {
-	result := LoadT[T](opts...)
+	return LoadTErrContext[T](context.Background(), opts...)
+}
+
+// LoadTErrContext is a one-shot helper like [LoadTErr], but passes ctx to
+// caller-provided custom sources.
+func LoadTErrContext[T any](ctx context.Context, opts ...Option) (T, error) {
+	result := LoadTContext[T](ctx, opts...)
 	value, err := result.Get()
 	if err != nil {
 		return value, oops.In("configx").
@@ -247,13 +289,25 @@ func LoadTErr[T any](opts ...Option) (T, error) {
 
 // LoadConfig is a one-shot helper that returns a raw *Config.
 func LoadConfig(opts ...Option) (*Config, error) {
-	return New(opts...).LoadConfig()
+	return LoadConfigContext(context.Background(), opts...)
+}
+
+// LoadConfigContext is a one-shot helper like [LoadConfig], but passes ctx to
+// caller-provided custom sources.
+func LoadConfigContext(ctx context.Context, opts ...Option) (*Config, error) {
+	return New(opts...).LoadConfigContext(ctx)
 }
 
 // LoadConfigT is a one-shot helper that returns a raw *Config (the type
 // parameter T is used only for option inference; it is not unmarshalled here).
 func LoadConfigT[T any](opts ...Option) (*Config, error) {
-	return NewT[T](opts...).LoadConfig()
+	return LoadConfigTContext[T](context.Background(), opts...)
+}
+
+// LoadConfigTContext is a one-shot helper like [LoadConfigT], but passes ctx to
+// caller-provided custom sources.
+func LoadConfigTContext[T any](ctx context.Context, opts ...Option) (*Config, error) {
+	return NewT[T](opts...).LoadConfigContext(ctx)
 }
 
 // NewWatcherT creates a one-shot typed watcher.

@@ -7,9 +7,9 @@ weight: 3
 
 ## Sources and priority
 
-Later sources **override** earlier ones. The default order is **dotenv → file → env → args**.
+Later sources **override** earlier ones. The default order is **dotenv → file → custom → env → args**.
 
-These examples use a **temporary YAML file**, `os.Setenv`, and `pflag` so they stay self-contained.
+These examples use a **temporary YAML file**, `os.Setenv`, custom sources, and `pflag` so they stay self-contained.
 
 ## 1) Load from a YAML file
 
@@ -151,7 +151,48 @@ func main() {
 }
 ```
 
-## 4) Command-line args override env and file values
+## 4) Custom sources
+
+Use `WithSource` or `WithSources` when config values come from a caller-owned
+source such as a database, remote config service, or secret manager. Custom
+sources return a `map[string]any` with koanf-style `"."` paths.
+
+By default, custom sources load after files and before environment variables,
+so env vars and command-line args can still override them.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/arcgolabs/configx"
+)
+
+type AppConfig struct {
+	Name string `validate:"required"`
+	Port int    `validate:"required,min=1,max=65535"`
+}
+
+func main() {
+	cfg, err := configx.LoadTErr[AppConfig](
+		configx.WithSource("remote", func(ctx context.Context) (map[string]any, error) {
+			return map[string]any{
+				"name": "from-custom-source",
+				"port": 6000,
+			}, nil
+		}),
+		configx.WithValidateLevel(configx.ValidateLevelStruct),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("%+v", cfg)
+}
+```
+
+## 5) Command-line args override env and file values
 
 `SourceArgs` now supports two entry styles:
 
@@ -215,7 +256,7 @@ Raw args support:
 
 Positional args are ignored, and parsing stops after a standalone `--`.
 
-## 5) Use a `pflag.FlagSet`
+## 6) Use a `pflag.FlagSet`
 
 If your application already uses `pflag`, hand the parsed `FlagSet` directly to `configx`.
 

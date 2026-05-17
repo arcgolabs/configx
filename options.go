@@ -3,6 +3,7 @@
 package configx
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,6 +32,8 @@ const (
 	SourceEnv
 	// SourceArgs reads values from raw command-line args and changed pflag flags.
 	SourceArgs
+	// SourceCustom reads values from caller-provided ConfigSource values.
+	SourceCustom
 )
 
 // String returns a human-readable name for the source.
@@ -44,9 +47,47 @@ func (s Source) String() string {
 		return "env"
 	case SourceArgs:
 		return "args"
+	case SourceCustom:
+		return "custom"
 	default:
 		return "unknown"
 	}
+}
+
+// ConfigSource is a caller-provided source of configuration values.
+//
+// Load returns a map whose keys use the koanf "." path delimiter
+// (for example, "server.port"). Nested maps are also accepted by koanf's
+// confmap provider. Sources are loaded in the order passed to WithSources.
+type ConfigSource interface {
+	Name() string
+	Load(ctx context.Context) (map[string]any, error)
+}
+
+type customSource struct {
+	name string
+	load func(context.Context) (map[string]any, error)
+}
+
+// NewSource builds a ConfigSource from a name and load function.
+//
+// The source name is used for diagnostics, tracing, and metrics. Empty names
+// are allowed but will be reported as "custom".
+func NewSource(name string, fn func(context.Context) (map[string]any, error)) ConfigSource {
+	return customSource{name: strings.TrimSpace(name), load: fn}
+}
+
+func (s customSource) Name() string {
+	return s.name
+}
+
+func (s customSource) Load(ctx context.Context) (map[string]any, error) {
+	if s.load == nil {
+		return nil, oops.In("configx").
+			With("op", "load_custom_source", "source", s.Name()).
+			Wrapf(ErrSource, "nil custom source loader")
+	}
+	return s.load(ctx)
 }
 
 // ValidateLevel controls how the loaded config is validated.
@@ -77,6 +118,7 @@ type Options struct {
 	envSeparator    string
 	files           []string
 	priority        []Source
+	customSources   []ConfigSource
 	args            []string
 	argsFlagSet     *pflag.FlagSet
 	argsNameFunc    func(string) string
@@ -116,7 +158,7 @@ type Option func(*Options)
 func NewOptions() *Options {
 	return &Options{
 		dotenvFiles:     []string{".env", ".env.local"},
-		priority:        []Source{SourceDotenv, SourceFile, SourceEnv, SourceArgs},
+		priority:        []Source{SourceDotenv, SourceFile, SourceCustom, SourceEnv, SourceArgs},
 		envSeparator:    defaultEnvSeparator,
 		argsNameFunc:    defaultArgsName,
 		validateLevel:   ValidateLevelNone,
@@ -168,10 +210,30 @@ func WithFiles(files ...string) Option {
 
 // WithPriority overrides the source loading order. Sources listed later
 // override sources listed earlier, so
-// [SourceDotenv, SourceFile, SourceEnv, SourceArgs] means changed command-line
-// flags win over env vars which win over file values which win over dotenv values.
+// [SourceDotenv, SourceFile, SourceCustom, SourceEnv, SourceArgs] means changed
+// command-line flags win over env vars which win over custom sources, file
+// values, and dotenv values.
 func WithPriority(p ...Source) Option {
 	return func(o *Options) { o.priority = p }
+}
+
+// WithSources appends caller-provided config sources to the SourceCustom stage.
+// Sources are loaded in the order provided; later custom sources override
+// earlier ones. The default priority loads custom sources after files and
+// before env vars and args.
+func WithSources(sources ...ConfigSource) Option {
+	return func(o *Options) {
+		for _, source := range sources {
+			if source != nil {
+				o.customSources = append(o.customSources, source)
+			}
+		}
+	}
+}
+
+// WithSource appends one custom source built from name and fn.
+func WithSource(name string, fn func(context.Context) (map[string]any, error)) Option {
+	return WithSources(NewSource(name, fn))
 }
 
 // WithArgs loads raw long-form command-line arguments as the SourceArgs source.

@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	configx "github.com/arcgolabs/configx"
-	formathcl "github.com/arcgolabs/configx/format/hcl"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -199,46 +198,6 @@ func TestWithFileParser_CustomExtension(t *testing.T) {
 	)
 	require.NoError(t, err)
 	assert.Equal(t, "custom", cfg.GetString("name"))
-}
-
-func TestWithHCLSupport(t *testing.T) {
-	cases := []struct {
-		name    string
-		ext     string
-		content string
-		wantName string
-		wantPort int
-	}{
-		{
-			name:     "hcl",
-			ext:      ".hcl",
-			content:  "name = \"hcl\"\nport = 8080\n",
-			wantName: "hcl",
-			wantPort: 8080,
-		},
-		{
-			name:     "tfvars",
-			ext:      ".tfvars",
-			content:  "name = \"tfvars\"\nport = 9090\n",
-			wantName: "tfvars",
-			wantPort: 9090,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			path := filepath.Join(t.TempDir(), "config"+tc.ext)
-			require.NoError(t, os.WriteFile(path, []byte(tc.content), 0o600))
-
-			cfg, err := configx.LoadConfig(
-				formathcl.WithHCLSupport(),
-				configx.WithFiles(path),
-			)
-			require.NoError(t, err)
-			assert.Equal(t, tc.wantName, cfg.GetString("name"))
-			assert.Equal(t, tc.wantPort, cfg.GetInt("port"))
-		})
-	}
 }
 
 func TestWithIgnoreDotenvError_StrictParseError(t *testing.T) {

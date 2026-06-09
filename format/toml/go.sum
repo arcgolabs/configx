@@ -1,0 +1,4 @@
+github.com/knadh/koanf/parsers/toml/v2 v2.2.1 h1:bDF9KugExgzHrvNvfxxYgaxqJHSv+ZOoa0j30BYNhW4=
+github.com/knadh/koanf/parsers/toml/v2 v2.2.1/go.mod h1:Lul0orUj0zAWE2R5yWKATUPq5yl1a6hlggz87rtDKnQ=
+github.com/pelletier/go-toml/v2 v2.3.1 h1:MYEvvGnQjeNkRF1qUuGolNtNExTDwct51yp7olPtrEc=
+github.com/pelletier/go-toml/v2 v2.3.1/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=

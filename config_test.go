@@ -200,6 +200,70 @@ func TestWithFileParser_CustomExtension(t *testing.T) {
 	assert.Equal(t, "custom", cfg.GetString("name"))
 }
 
+func TestWithFileGlobs_LoadsMatchesInSortedOrder(t *testing.T) {
+	dir := t.TempDir()
+	basePath := filepath.Join(dir, "00-base"+testConfigFileExtension)
+	overridePath := filepath.Join(dir, "10-override"+testConfigFileExtension)
+	writeConfigFile(t, overridePath, "name: override\n")
+	writeConfigFile(t, basePath, "name: base\nport: 8080\n")
+
+	cfg, err := configx.LoadConfig(
+		configx.WithFileParser(testConfigFileExtension, kvFileParser{}),
+		configx.WithFileGlobs(filepath.Join(dir, "*"+testConfigFileExtension)),
+	)
+	require.NoError(t, err)
+	assert.Equal(t, "override", cfg.GetString("name"))
+	assert.Equal(t, 8080, cfg.GetInt("port"))
+}
+
+func TestWithFileGlobs_AppendsToExplicitFiles(t *testing.T) {
+	dir := t.TempDir()
+	basePath := filepath.Join(dir, "base"+testConfigFileExtension)
+	overridePath := filepath.Join(dir, "override"+testConfigFileExtension)
+	writeConfigFile(t, basePath, "name: base\nport: 8080\n")
+	writeConfigFile(t, overridePath, "name: override\n")
+
+	cfg, err := configx.LoadConfig(
+		configx.WithFileParser(testConfigFileExtension, kvFileParser{}),
+		configx.WithFiles(basePath),
+		configx.WithFileGlobs(filepath.Join(dir, "override"+testConfigFileExtension)),
+	)
+	require.NoError(t, err)
+	assert.Equal(t, "override", cfg.GetString("name"))
+	assert.Equal(t, 8080, cfg.GetInt("port"))
+}
+
+func TestWithFileGlobs_SupportsRecursiveDoubleStar(t *testing.T) {
+	dir := t.TempDir()
+	nestedDir := filepath.Join(dir, "profiles", "prod")
+	require.NoError(t, os.MkdirAll(nestedDir, 0o700))
+
+	basePath := filepath.Join(dir, "00-base"+testConfigFileExtension)
+	nestedPath := filepath.Join(nestedDir, "10-prod"+testConfigFileExtension)
+	writeConfigFile(t, basePath, "name: base\nport: 8080\n")
+	writeConfigFile(t, nestedPath, "name: prod\n")
+
+	cfg, err := configx.LoadConfig(
+		configx.WithFileParser(testConfigFileExtension, kvFileParser{}),
+		configx.WithFileGlobs(filepath.Join(dir, "**", "*"+testConfigFileExtension)),
+	)
+	require.NoError(t, err)
+	assert.Equal(t, "prod", cfg.GetString("name"))
+	assert.Equal(t, 8080, cfg.GetInt("port"))
+}
+
+func TestWithFileGlobs_NoMatchIsIgnored(t *testing.T) {
+	cfg, err := configx.LoadConfig(
+		configx.WithDefaults(map[string]any{
+			"name": "defaults",
+		}),
+		configx.WithFileParser(testConfigFileExtension, kvFileParser{}),
+		configx.WithFileGlobs(filepath.Join(t.TempDir(), "*"+testConfigFileExtension)),
+	)
+	require.NoError(t, err)
+	assert.Equal(t, "defaults", cfg.GetString("name"))
+}
+
 func TestWithIgnoreDotenvError_StrictParseError(t *testing.T) {
 	envFile := filepath.Join(t.TempDir(), ".env")
 	writeErr := os.WriteFile(envFile, []byte("BROKEN='unclosed"), 0o600)

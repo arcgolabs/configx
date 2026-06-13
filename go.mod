@@ -7,6 +7,7 @@ require (
 	github.com/arcgolabs/collectionx/mapping v0.9.0
 	github.com/arcgolabs/observabilityx v0.4.0
 	github.com/arcgolabs/pkg/option v0.0.3
+	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/go-playground/validator/v10 v10.30.3
 	github.com/joho/godotenv v1.5.1
 	github.com/knadh/koanf/providers/confmap v1.0.0

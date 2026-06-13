@@ -6,6 +6,8 @@ github.com/arcgolabs/observabilityx v0.4.0 h1:7ihfQev5KSV8xcO+6DcbMcUYSDVsYhnENH
 github.com/arcgolabs/observabilityx v0.4.0/go.mod h1:yZeU3QmYUwhd051UnoD4cFu89sdLjPYGU15QKX+TVac=
 github.com/arcgolabs/pkg/option v0.0.3 h1:SS7WDMUAr7XW2/sOZkaqDrIUrygJK8u1gdPs9A4K5+A=
 github.com/arcgolabs/pkg/option v0.0.3/go.mod h1:91/Ov3tYLKEZ+ytBT30ay4l6JNTRjzk/HRRfDTElhyA=
+github.com/bmatcuk/doublestar/v4 v4.10.0 h1:zU9WiOla1YA122oLM6i4EXvGW62DvKZVxIe6TYWexEs=
+github.com/bmatcuk/doublestar/v4 v4.10.0/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/arcgolabs/observabilityx"
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/go-playground/validator/v10"
 	"github.com/knadh/koanf/v2"
 	"github.com/samber/lo"
@@ -214,6 +215,16 @@ func WithFiles(files ...string) Option {
 	return func(o *Options) { o.files = files }
 }
 
+// WithFileGlobs expands filesystem glob patterns, including recursive "**"
+// patterns, and appends matching config files to the file list. Matches are
+// sorted per pattern; later files override earlier ones after loading. Patterns
+// with no matches are ignored.
+func WithFileGlobs(patterns ...string) Option {
+	return func(o *Options) {
+		o.files = append(o.files, expandFileGlobs(patterns...)...)
+	}
+}
+
 // WithFileParser registers a parser for a file extension.
 // The extension may be provided with or without a leading dot and is matched
 // case-insensitively.
@@ -381,6 +392,23 @@ func supportedExtensions(fileParsers map[string]koanf.Parser) []string {
 	}
 	sort.Strings(extensions)
 	return extensions
+}
+
+func expandFileGlobs(patterns ...string) []string {
+	if len(patterns) == 0 {
+		return nil
+	}
+
+	files := make([]string, 0, len(patterns))
+	for _, pattern := range patterns {
+		matches, err := doublestar.FilepathGlob(pattern, doublestar.WithFilesOnly())
+		if err != nil {
+			continue
+		}
+		sort.Strings(matches)
+		files = append(files, matches...)
+	}
+	return files
 }
 
 func defaultArgsName(name string) string {

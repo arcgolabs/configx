@@ -372,7 +372,7 @@ func TestCustomSource_ContextCanceled(t *testing.T) {
 	_, err := configx.LoadConfigContext(ctx,
 		configx.WithSource("remote", func(_ context.Context) (map[string]any, error) {
 			called = true
-			return nil, nil
+			return map[string]any{}, nil
 		}),
 	)
 	require.Error(t, err)

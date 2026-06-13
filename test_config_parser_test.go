@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	configx "github.com/arcgolabs/configx"
 	"github.com/stretchr/testify/require"
 )
 
@@ -83,12 +82,4 @@ func tempConfigFile(t *testing.T, content string) string {
 	path := filepath.Join(dir, "config"+testConfigFileExtension)
 	writeConfigFile(t, path, content)
 	return path
-}
-
-func withKVFileSupport(t *testing.T, path string, opts ...configx.Option) []configx.Option {
-	t.Helper()
-	return append([]configx.Option{
-		configx.WithFileParser(testConfigFileExtension, kvFileParser{}),
-		configx.WithFiles(path),
-	}, opts...)
 }

@@ -1,4 +1,4 @@
-package hcl
+package hcl_test
 
 import (
 	"os"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	configx "github.com/arcgolabs/configx"
+	hclsupport "github.com/arcgolabs/configx/format/hcl"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -47,7 +48,7 @@ func TestWithHCLSupport(t *testing.T) {
 			require.NoError(t, os.WriteFile(path, []byte(tc.content), 0o600))
 
 			cfg, err := configx.LoadConfig(
-				WithHCLSupport(),
+				hclsupport.WithHCLSupport(),
 				configx.WithFiles(path),
 			)
 			require.NoError(t, err)

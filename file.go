@@ -6,7 +6,6 @@ import (
 
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
-	"github.com/samber/lo"
 	"github.com/samber/oops"
 )
 
@@ -30,29 +29,24 @@ func wantExtensions(parserRegistry map[string]koanf.Parser) []string {
 // Returns [ErrUnsupportedFileFormat] (wrapped) if any file has an extension
 // with no registered parser.
 func loadFiles(k *koanf.Koanf, files []string, parserRegistry map[string]koanf.Parser) error {
-	if err := lo.Reduce(files, func(result error, path string, _ int) error {
-		if result != nil {
-			return result
-		}
-
+	for _, path := range files {
 		ext := strings.ToLower(filepath.Ext(path))
 		parser := parserFor(path, parserRegistry)
 		if parser == nil {
 			return oops.In("configx").
-				With("op", "load_file", "path", path, "extension", ext).
-				Wrapf(ErrUnsupportedFileFormat, "%q (got %q, want one of %v)", path, ext, wantExtensions(parserRegistry))
+				With("op", "load_files", "file_count", len(files)).
+				Wrapf(oops.In("configx").
+					With("op", "load_file", "path", path, "extension", ext).
+					Wrapf(ErrUnsupportedFileFormat, "%q (got %q, want one of %v)", path, ext, wantExtensions(parserRegistry)), "configx: load files")
 		}
 
 		if err := k.Load(file.Provider(path), parser); err != nil {
 			return oops.In("configx").
-				With("op", "load_file", "path", path, "extension", ext).
-				Wrapf(err, "configx: load config file %q", path)
+				With("op", "load_files", "file_count", len(files)).
+				Wrapf(oops.In("configx").
+					With("op", "load_file", "path", path, "extension", ext).
+					Wrapf(err, "configx: load config file %q", path), "configx: load files")
 		}
-		return nil
-	}, error(nil)); err != nil {
-		return oops.In("configx").
-			With("op", "load_files", "file_count", len(files)).
-			Wrapf(err, "configx: load files")
 	}
 	return nil
 }

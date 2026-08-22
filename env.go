@@ -1,13 +1,14 @@
 package configx
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"strings"
 
 	"github.com/joho/godotenv"
 	envProvider "github.com/knadh/koanf/providers/env/v2"
 	"github.com/knadh/koanf/v2"
-	"github.com/samber/lo"
 	"github.com/samber/oops"
 )
 
@@ -15,15 +16,12 @@ import (
 // files and parse errors are silently skipped; otherwise they are returned as
 // errors.
 func loadDotenv(files []string, ignoreErr bool) error {
-	if err := lo.Reduce(files, func(result error, path string, _ int) error {
-		if result != nil {
-			return result
+	for _, path := range files {
+		if err := loadDotenvFile(path, ignoreErr); err != nil {
+			return oops.In("configx").
+				With("op", "load_dotenv", "file_count", len(files), "ignore_error", ignoreErr).
+				Wrapf(err, "load dotenv files")
 		}
-		return loadDotenvFile(path, ignoreErr)
-	}, error(nil)); err != nil {
-		return oops.In("configx").
-			With("op", "load_dotenv", "file_count", len(files), "ignore_error", ignoreErr).
-			Wrapf(err, "load dotenv files")
 	}
 	return nil
 }
@@ -33,7 +31,7 @@ func loadDotenvFile(path string, ignoreErr bool) error {
 		if ignoreErr {
 			return nil
 		}
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return oops.In("configx").
 				With("op", "load_dotenv_file", "path", path, "ignore_error", ignoreErr).
 				Wrapf(err, "dotenv file not found")

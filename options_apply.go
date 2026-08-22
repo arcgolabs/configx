@@ -1,9 +1,11 @@
 package configx
 
-import "github.com/arcgolabs/pkg/option"
-
 func buildOptions(opts ...Option) *Options {
 	options := NewOptions()
-	option.Apply(options, opts...)
+	for _, apply := range opts {
+		if apply != nil {
+			apply(options)
+		}
+	}
 	return options
 }

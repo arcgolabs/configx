@@ -1,11 +1,11 @@
-go 1.26.2
+go 1.27.0
 
 use (
 	.
+	examples/observability
 	format/hcl
 	format/json
 	format/toml
 	format/yaml
-	examples/observability
 	fx
 )

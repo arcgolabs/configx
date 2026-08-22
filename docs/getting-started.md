@@ -17,7 +17,7 @@ go get github.com/arcgolabs/configx@latest
 
 ## 2) Create `main.go`
 
-Flat default keys (`name`, `port`) map to the struct fields. `LoadTErr[T]` returns `(T, error)` after unmarshal + validation.
+Flat default keys (`name`, `port`) map to the struct fields. `Load[T]` returns `(T, error)` after unmarshal + validation.
 
 ```go
 package main
@@ -35,7 +35,7 @@ type AppConfig struct {
 }
 
 func main() {
-	cfg, err := configx.LoadTErr[AppConfig](
+	cfg, err := configx.Load[AppConfig](
 		configx.WithDefaults(map[string]any{
 			"name": "demo",
 			"port": 8080,

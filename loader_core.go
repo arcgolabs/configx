@@ -8,7 +8,6 @@ import (
 	"github.com/arcgolabs/observabilityx"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/v2"
-	"github.com/samber/lo"
 	"github.com/samber/oops"
 )
 
@@ -88,12 +87,11 @@ func loadConfiguredDefaults(k *koanf.Koanf, opts *Options) error {
 		return err
 	}
 
-	if !opts.defaults.IsPresent() {
+	if !opts.hasDefaults {
 		return nil
 	}
 
-	defaults, _ := opts.defaults.Get()
-	if err := k.Load(confmap.Provider(defaults, "."), nil); err != nil {
+	if err := k.Load(confmap.Provider(opts.defaults, "."), nil); err != nil {
 		return oops.In("configx").
 			With("op", "load_defaults").
 			Wrapf(errors.Join(ErrDefaults, err), "defaults map")
@@ -104,18 +102,15 @@ func loadConfiguredDefaults(k *koanf.Koanf, opts *Options) error {
 }
 
 func loadTypedDefaults(k *koanf.Koanf, opts *Options) error {
-	if !opts.typedDefaults.IsPresent() {
-		return nil
-	}
-
-	defaults, _ := opts.typedDefaults.Get()
-	if errMsg, bad := defaults["__configx_invalid_typed_defaults__"].(string); bad {
+	if opts.typedDefaultsErr != nil {
 		return oops.In("configx").
 			With("op", "load_typed_defaults").
-			Wrapf(errors.Join(ErrDefaults, errors.New(errMsg)), "typed defaults")
+			Wrapf(errors.Join(ErrDefaults, opts.typedDefaultsErr), "typed defaults")
 	}
-
-	if err := k.Load(confmap.Provider(defaults, "."), nil); err != nil {
+	if opts.typedDefaults == nil {
+		return nil
+	}
+	if err := k.Load(confmap.Provider(opts.typedDefaults, "."), nil); err != nil {
 		return oops.In("configx").
 			With("op", "load_typed_defaults").
 			Wrapf(errors.Join(ErrDefaults, err), "typed defaults map")
@@ -131,15 +126,12 @@ func loadConfiguredSources(
 	k *koanf.Koanf,
 	opts *Options,
 ) error {
-	if err := lo.Reduce(opts.priority, func(result error, src Source, _ int) error {
-		if result != nil {
-			return result
+	for _, src := range opts.priority {
+		if err := loadConfiguredSource(ctx, obs, k, opts, src); err != nil {
+			return oops.In("configx").
+				With("op", "load_sources").
+				Wrapf(err, "configx: load configured sources")
 		}
-		return loadConfiguredSource(ctx, obs, k, opts, src)
-	}, error(nil)); err != nil {
-		return oops.In("configx").
-			With("op", "load_sources").
-			Wrapf(err, "configx: load configured sources")
 	}
 	return nil
 }

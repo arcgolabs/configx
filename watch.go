@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 
 	"github.com/knadh/koanf/providers/file"
-	"github.com/samber/lo"
 	"github.com/samber/oops"
 )
 
@@ -127,7 +126,10 @@ func (w *Watcher) OnChange(fn ChangeHandler) {
 	defer w.subsMu.Unlock()
 
 	current := w.loadSubscribers()
-	w.subs.Store(new(changeHandlers(lo.Concat(current, []ChangeHandler{fn}))))
+	next := make(changeHandlers, len(current)+1)
+	copy(next, current)
+	next[len(current)] = fn
+	w.subs.Store(&next)
 }
 
 // Start begins watching config files for changes and blocks until ctx is
@@ -166,12 +168,14 @@ func (w *Watcher) Close() error {
 	w.stopOnce.Do(func() { close(w.stopCh) })
 	logDebug(w.opts, "configx watcher closing", "providers", len(w.providers))
 
-	errs := lo.FilterMap(w.providers, func(fp *file.File, _ int) (error, bool) {
-		err := fp.Unwatch()
-		return oops.In("configx").
-			With("op", "watcher_close").
-			Wrapf(err, "configx: unwatch provider"), err != nil
-	})
+	errs := make([]error, 0, len(w.providers))
+	for _, fp := range w.providers {
+		if err := fp.Unwatch(); err != nil {
+			errs = append(errs, oops.In("configx").
+				With("op", "watcher_close").
+				Wrapf(err, "configx: unwatch provider"))
+		}
+	}
 	if len(errs) > 0 {
 		logError(w.opts, "configx watcher close completed with errors", "errors", len(errs))
 	} else {

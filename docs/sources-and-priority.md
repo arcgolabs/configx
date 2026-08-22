@@ -42,7 +42,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cfg, err := configx.LoadTErr[AppConfig](
+	cfg, err := configx.Load[AppConfig](
 		formatyaml.WithYAMLSupport(),
 		configx.WithFiles(path),
 		configx.WithValidateLevel(configx.ValidateLevelStruct),
@@ -92,7 +92,7 @@ func main() {
 	}
 	defer func() { _ = os.Unsetenv("APP_PORT") }()
 
-	cfg, err := configx.LoadTErr[AppConfig](
+	cfg, err := configx.Load[AppConfig](
 		formatyaml.WithYAMLSupport(),
 		configx.WithFiles(path),
 		configx.WithEnvPrefix("APP"),
@@ -143,7 +143,7 @@ func main() {
 	}
 	defer func() { _ = os.Unsetenv("APP_PORT") }()
 
-	cfg, err := configx.LoadTErr[AppConfig](
+	cfg, err := configx.Load[AppConfig](
 		formatyaml.WithYAMLSupport(),
 		configx.WithFiles(path),
 		configx.WithEnvPrefix("APP"),
@@ -182,7 +182,7 @@ type AppConfig struct {
 }
 
 func main() {
-	cfg, err := configx.LoadTErr[AppConfig](
+	cfg, err := configx.Load[AppConfig](
 		configx.WithSource("remote", func(ctx context.Context) (map[string]any, error) {
 			return map[string]any{
 				"name": "from-custom-source",
@@ -241,7 +241,7 @@ func main() {
 	}
 	defer func() { _ = os.Unsetenv("APP_PORT") }()
 
-	cfg, err := configx.LoadTErr[AppConfig](
+	cfg, err := configx.Load[AppConfig](
 		formatyaml.WithYAMLSupport(),
 		configx.WithFiles(path),
 		configx.WithEnvPrefix("APP"),
@@ -294,7 +294,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cfg, err := configx.LoadTErr[AppConfig](
+	cfg, err := configx.Load[AppConfig](
 		configx.WithFlagSet(fs),
 		configx.WithValidateLevel(configx.ValidateLevelStruct),
 	)

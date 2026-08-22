@@ -31,7 +31,7 @@ func BenchmarkLoadConfigDefaults(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for range b.N {
+	for b.Loop() {
 		cfg, err := configx.LoadConfig(configx.WithDefaults(benchmarkDefaults))
 		if err != nil {
 			b.Fatalf("load config: %v", err)
@@ -48,7 +48,7 @@ func BenchmarkConfigGetters(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for range b.N {
+	for b.Loop() {
 		_ = cfg.GetString("service.name")
 		_ = cfg.GetInt("service.port")
 		_ = cfg.GetBool("feature.x")
@@ -61,8 +61,8 @@ func BenchmarkGetAsStruct(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for range b.N {
-		value, err := configx.GetAs[benchmarkServiceConfig](cfg, "service")
+	for b.Loop() {
+		value, err := cfg.GetAs[benchmarkServiceConfig]("service")
 		if err != nil {
 			b.Fatalf("GetAs failed: %v", err)
 		}

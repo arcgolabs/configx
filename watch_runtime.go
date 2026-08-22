@@ -7,7 +7,6 @@ import (
 
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
-	"github.com/samber/lo"
 	"github.com/samber/oops"
 )
 
@@ -33,20 +32,19 @@ func queueWatcherReload(reloadCh chan<- struct{}) {
 }
 
 func (w *Watcher) startProviders(trigger func()) error {
-	started, err := lo.ReduceErr(w.providers, func(started int, fp *file.File, index int) (int, error) {
+	started := 0
+	for index, fp := range w.providers {
 		if err := fp.Watch(w.watchProvider(index, trigger)); err != nil {
-			return started, oops.In("configx").
+			wrapped := oops.In("configx").
 				With("op", "watcher_start_provider", "provider_index", index, "path", w.providerPath(index)).
 				Wrapf(err, "watch provider")
+			w.cleanupStartedProviders(started)
+			logError(w.opts, "configx watcher start failed", "started", started, "error", wrapped)
+			return oops.In("configx").
+				With("op", "watcher_start", "started", started, "provider_count", len(w.providers)).
+				Wrapf(wrapped, "start file watcher")
 		}
-		return started + 1, nil
-	}, 0)
-	if err != nil {
-		w.cleanupStartedProviders(started)
-		logError(w.opts, "configx watcher start failed", "started", started, "error", err)
-		return oops.In("configx").
-			With("op", "watcher_start", "started", started, "provider_count", len(w.providers)).
-			Wrapf(err, "start file watcher")
+		started++
 	}
 	return nil
 }
@@ -67,13 +65,13 @@ func (w *Watcher) watchProvider(index int, trigger func()) func(_ any, err error
 }
 
 func (w *Watcher) cleanupStartedProviders(count int) {
-	lo.ForEach(lo.Range(count), func(index int, _ int) {
+	for index := range count {
 		if err := w.providers[index].Unwatch(); err != nil {
 			w.handleErr(oops.In("configx").
 				With("op", "watcher_cleanup_provider", "provider_index", index, "path", w.providerPath(index)).
 				Wrapf(err, "cleanup file watcher"))
 		}
-	})
+	}
 }
 
 func (w *Watcher) run(ctx context.Context, debounce time.Duration, reloadCh <-chan struct{}) error {
@@ -156,9 +154,9 @@ func (w *Watcher) reload(ctx context.Context) {
 // notify calls every registered ChangeHandler in order.
 func (w *Watcher) notify(cfg *Config, err error) {
 	logDebug(w.opts, "configx watcher notifying subscribers", "subscribers", len(w.loadSubscribers()), "has_error", err != nil)
-	lo.ForEach(w.loadSubscribers(), func(fn ChangeHandler, _ int) {
+	for _, fn := range w.loadSubscribers() {
 		fn(cfg, err)
-	})
+	}
 }
 
 // handleErr forwards err to the watchErrHandler when one is configured.
@@ -181,12 +179,14 @@ func (w *Watcher) loadSubscribers() []ChangeHandler {
 // file path. These providers are used exclusively for change detection;
 // loadConfigFromOptions handles the actual reading and parsing.
 func buildWatchProviders(paths []string, parserRegistry map[string]koanf.Parser) []*file.File {
-	return lo.FilterMap(paths, func(path string, _ int) (*file.File, bool) {
+	providers := make([]*file.File, 0, len(paths))
+	for _, path := range paths {
 		if parserFor(path, parserRegistry) == nil {
-			return nil, false
+			continue
 		}
-		return file.Provider(path), true
-	})
+		providers = append(providers, file.Provider(path))
+	}
+	return providers
 }
 
 func (w *Watcher) providerPath(index int) string {

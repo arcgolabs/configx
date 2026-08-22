@@ -9,8 +9,8 @@ import (
 
 var errNilConfig = errors.New("config is nil")
 
-// GetAs converts related values.
-func GetAs[T any](cfg *Config, path string) (T, error) {
+// GetAs unmarshals the value at path into T.
+func (cfg *Config) GetAs[T any](path string) (T, error) {
 	var zero T
 	if cfg == nil {
 		return zero, oops.In("configx").
@@ -27,8 +27,8 @@ func GetAs[T any](cfg *Config, path string) (T, error) {
 	return out, nil
 }
 
-// GetAsOr returns related data.
-func GetAsOr[T any](cfg *Config, path string, fallback T) T {
+// GetAsOr returns fallback when path is absent or cannot be decoded as T.
+func (cfg *Config) GetAsOr[T any](path string, fallback T) T {
 	if cfg == nil {
 		return fallback
 	}
@@ -36,20 +36,35 @@ func GetAsOr[T any](cfg *Config, path string, fallback T) T {
 		return fallback
 	}
 
-	out, err := GetAs[T](cfg, path)
+	out, err := cfg.GetAs[T](path)
 	if err != nil {
 		return fallback
 	}
 	return out
 }
 
-// MustGetAs converts related values.
-func MustGetAs[T any](cfg *Config, path string) T {
-	out, err := GetAs[T](cfg, path)
+// MustGetAs unmarshals the value at path into T and panics on failure.
+func (cfg *Config) MustGetAs[T any](path string) T {
+	out, err := cfg.GetAs[T](path)
 	if err != nil {
 		panic(oops.In("configx").
 			With("op", "must_get_as", "path", path).
 			Wrapf(err, "get config value"))
 	}
 	return out
+}
+
+// GetAs is retained as a compatibility wrapper. Prefer [Config.GetAs].
+func GetAs[T any](cfg *Config, path string) (T, error) {
+	return cfg.GetAs[T](path)
+}
+
+// GetAsOr is retained as a compatibility wrapper. Prefer [Config.GetAsOr].
+func GetAsOr[T any](cfg *Config, path string, fallback T) T {
+	return cfg.GetAsOr(path, fallback)
+}
+
+// MustGetAs is retained as a compatibility wrapper. Prefer [Config.MustGetAs].
+func MustGetAs[T any](cfg *Config, path string) T {
+	return cfg.MustGetAs[T](path)
 }

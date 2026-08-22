@@ -11,7 +11,7 @@ weight: 3
 
 It provides two main usage styles:
 
-- **Typed load** — `LoadT[T]` / `LoadTErr[T]` unmarshals into a struct and (optionally) validates it.
+- **Typed load** — `Load[T]` unmarshals into a struct and (optionally) validates it.
 - **Dynamic config** — `LoadConfig` returns `*configx.Config` for path-based access (`GetString`, `Exists`, `All`, `Unmarshal`).
 
 Sources are merged by priority. Later sources override earlier ones. The default order is `dotenv → file → custom → env → args`.
@@ -52,17 +52,18 @@ cfg, err := configx.LoadConfig(
 
 ## Install / Import
 
+Requires Go 1.27 or newer; the typed loader and getters use Go 1.27 generic methods.
+
 ```bash
 go get github.com/arcgolabs/configx@latest
 ```
 
 ## Key API surface (summary)
 
-- `Load(out, opts...)` — load into an existing struct pointer
-- `LoadContext(ctx, out, opts...)` — load with context-aware custom sources
-- `LoadT[T](opts...)` / `LoadTErr[T](opts...)` — typed load helpers
+- `Load[T](opts...)` — typed load helper
+- `LoadContext[T](ctx, opts...)` — typed load with context-aware custom sources
 - `LoadConfig(opts...)` — return `*Config` for dynamic access
-- `New(opts...)` / `NewT[T](opts...)` — build reusable loaders
+- `New(opts...)` — build a reusable loader; call `loader.Load[T]()` for any target type
 - `NewWatcher(opts...)` / `Watch(ctx, ...)` — hot reload
 
 ## Integration guide

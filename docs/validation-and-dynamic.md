@@ -7,7 +7,7 @@ weight: 4
 
 ## Validation and dynamic config
 
-Use **`Load` / `LoadT` / `LoadTErr`** for typed structs, or **`LoadConfig`** when you need path-based getters (`GetString`, `Exists`, `All`) without a single struct.
+Use **`Load[T]`** for typed structs, or **`LoadConfig`** when you need path-based getters (`GetString`, `Exists`, `All`) without a single struct.
 
 ## 1) Custom `validator.Validate` + `Load`
 
@@ -30,8 +30,7 @@ type AppConfig struct {
 func main() {
 	v := validator.New(validator.WithRequiredStructEnabled())
 
-	var cfg AppConfig
-	err := configx.Load(&cfg,
+	cfg, err := configx.Load[AppConfig](
 		configx.WithDefaults(map[string]any{
 			"name": "demo",
 			"port": 8080,

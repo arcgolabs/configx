@@ -8,8 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -17,8 +18,6 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/go-playground/validator/v10"
 	"github.com/knadh/koanf/v2"
-	"github.com/samber/lo"
-	"github.com/samber/mo"
 	"github.com/samber/oops"
 	"github.com/spf13/pflag"
 )
@@ -118,17 +117,19 @@ type Options struct {
 	// envSeparator is the string within an env key that maps to the koanf "."
 	// path delimiter. Defaults to "_". Set to "__" for double-underscore
 	// nesting convention.
-	envSeparator    string
-	files           []string
-	fileParsers     map[string]koanf.Parser
-	priority        []Source
-	customSources   []ConfigSource
-	args            []string
-	argsFlagSet     *pflag.FlagSet
-	argsNameFunc    func(string) string
-	defaults        mo.Option[map[string]any]
-	typedDefaults   mo.Option[map[string]any]
-	ignoreDotenvErr bool
+	envSeparator     string
+	files            []string
+	fileParsers      map[string]koanf.Parser
+	priority         []Source
+	customSources    []ConfigSource
+	args             []string
+	argsFlagSet      *pflag.FlagSet
+	argsNameFunc     func(string) string
+	defaults         map[string]any
+	hasDefaults      bool
+	typedDefaults    map[string]any
+	typedDefaultsErr error
+	ignoreDotenvErr  bool
 
 	// --- validation ---
 	validate      *validator.Validate
@@ -286,7 +287,7 @@ func WithSource(name string, fn func(context.Context) (map[string]any, error)) O
 // Positional args are ignored. Parsing stops after a standalone "--".
 func WithArgs(args ...string) Option {
 	return func(o *Options) {
-		o.args = append([]string(nil), args...)
+		o.args = slices.Clone(args)
 	}
 }
 
@@ -322,7 +323,8 @@ func WithArgsNameFunc(fn func(string) string) Option {
 // source. Keys use the koanf "." path delimiter (e.g. "server.port").
 func WithDefaults(m map[string]any) Option {
 	return func(o *Options) {
-		o.defaults = mo.Some(m)
+		o.defaults = m
+		o.hasDefaults = true
 	}
 }
 
@@ -330,23 +332,26 @@ func WithDefaults(m map[string]any) Option {
 // values to any automatically.
 func WithDefaultsTyped[T any](m map[string]T) Option {
 	return func(o *Options) {
-		o.defaults = mo.Some(lo.MapValues(m, func(value T, _ string) any {
-			return value
-		}))
+		o.defaults = make(map[string]any, len(m))
+		for key, value := range m {
+			o.defaults[key] = value
+		}
+		o.hasDefaults = true
 	}
 }
 
 // WithTypedDefaults sets defaults from a strongly typed config object.
-// This option is intended for typed loading flows (LoadT/LoadTErr/LoaderT).
+// This option is intended for typed loading flows.
 func WithTypedDefaults[T any](cfg T) Option {
 	return func(o *Options) {
 		m, err := typedDefaultsToMap(cfg)
 		if err != nil {
-			// Preserve option signature; the load path will report this via ErrDefaults.
-			o.typedDefaults = mo.Some(map[string]any{"__configx_invalid_typed_defaults__": err.Error()})
+			o.typedDefaults = nil
+			o.typedDefaultsErr = err
 			return
 		}
-		o.typedDefaults = mo.Some(m)
+		o.typedDefaults = m
+		o.typedDefaultsErr = nil
 	}
 }
 
@@ -386,12 +391,7 @@ func supportedExtensions(fileParsers map[string]koanf.Parser) []string {
 	if len(fileParsers) == 0 {
 		return nil
 	}
-	extensions := make([]string, 0, len(fileParsers))
-	for ext := range fileParsers {
-		extensions = append(extensions, ext)
-	}
-	sort.Strings(extensions)
-	return extensions
+	return slices.Sorted(maps.Keys(fileParsers))
 }
 
 func expandFileGlobs(patterns ...string) []string {
@@ -405,7 +405,7 @@ func expandFileGlobs(patterns ...string) []string {
 		if err != nil {
 			continue
 		}
-		sort.Strings(matches)
+		slices.Sort(matches)
 		files = append(files, matches...)
 	}
 	return files

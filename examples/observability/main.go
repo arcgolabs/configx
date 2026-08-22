@@ -3,14 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
+	"time"
 
-	"github.com/arcgolabs/httpx"
-	"github.com/arcgolabs/httpx/adapter"
-	"github.com/arcgolabs/httpx/adapter/std"
+	"github.com/arcgolabs/configx"
 	"github.com/arcgolabs/observabilityx"
 	otelobs "github.com/arcgolabs/observabilityx/otel"
 	promobs "github.com/arcgolabs/observabilityx/prometheus"
-	"github.com/arcgolabs/configx"
 )
 
 type appConfig struct {
@@ -28,7 +27,7 @@ func run() error {
 	prom := promobs.New(promobs.WithNamespace("configx_example"))
 	obs := observabilityx.Multi(otelobs.New(), prom)
 
-	cfg, err := configx.LoadTErr[appConfig](
+	cfg, err := configx.Load[appConfig](
 		configx.WithObservability(obs),
 		configx.WithDefaults(map[string]any{
 			"name": "arcgo",
@@ -42,14 +41,16 @@ func run() error {
 
 	log.Printf("loaded config: %+v", cfg)
 
-	stdAdapter := std.New(nil, adapter.HumaOptions{DisableDocsRoutes: true})
-	metricsServer := httpx.New(
-		httpx.WithAdapter(stdAdapter),
-	)
-	stdAdapter.Router().Handle("/metrics", prom.Handler())
+	mux := http.NewServeMux()
+	mux.Handle("GET /metrics", prom.Handler())
+	server := &http.Server{
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
 
-	log.Println("httpx metrics route registered: GET /metrics")
-	if err := metricsServer.ListenAndServe(":8080"); err != nil {
+	log.Printf("metrics route registered: http://localhost:%d/metrics", cfg.Port)
+	if err := server.ListenAndServe(); err != nil {
 		return fmt.Errorf("serve metrics: %w", err)
 	}
 	return nil

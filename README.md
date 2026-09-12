@@ -23,6 +23,7 @@ Sources are merged by priority. Later sources override earlier ones. The default
 - Custom in-memory/remote sources (`WithSource`, `WithSources`, `NewSource`)
 - Environment variables (`WithEnvPrefix`, `WithEnvSeparator`)
 - Command-line args and flags (`WithArgs`, `WithOSArgs`, `WithFlagSet`, `WithCommandLineFlags`, `WithArgsNameFunc`)
+- Typed schema derivation and automatic `pflag` binding (`SchemaOf`, `Schema.BindFlags`)
 - Explicit source priority (`WithPriority`)
 - Defaults (`WithDefaults`, `WithDefaultsTyped`, `WithTypedDefaults`)
 - Optional validation (`WithValidateLevel`, `WithValidator`)
@@ -48,6 +49,7 @@ cfg, err := configx.LoadConfig(
 - Release notes: [configx v0.3.0](./release-v0.3.0)
 - Minimal typed load with validation: [Getting Started](./getting-started)
 - Files, env vars, command-line inputs, merge order: [Sources and priority](./sources-and-priority)
+- Typed schema metadata and generated flags: [Schema and flags](./schema-and-flags)
 - Custom validator and dynamic config: [Validation and dynamic config](./validation-and-dynamic)
 
 ## Install / Import
@@ -65,6 +67,7 @@ go get github.com/arcgolabs/configx@latest
 - `LoadConfig(opts...)` — return `*Config` for dynamic access
 - `New(opts...)` — build a reusable loader; call `loader.Load[T]()` for any target type
 - `NewWatcher(opts...)` / `Watch(ctx, ...)` — hot reload
+- `SchemaOf(defaults)` / `schema.BindFlags(fs)` — derive metadata and typed CLI flags from a config struct
 
 ## Integration guide
 

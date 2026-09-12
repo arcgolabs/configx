@@ -31,19 +31,19 @@ func newConfig(k *koanf.Koanf, opts *Options) *Config {
 }
 
 // validateStruct documents related behavior.
-func (c *Config) validateStruct(out any) error {
-	if c == nil {
+func (cfg *Config) validateStruct(out any) error {
+	if cfg == nil {
 		return oops.In("configx").
 			With("op", "validate_struct").
 			Wrapf(errNilConfig, "validate config")
 	}
-	switch c.level {
+	switch cfg.level {
 	case ValidateLevelNone:
 		return nil
 	case ValidateLevelStruct:
-		if err := c.validate.Struct(out); err != nil {
+		if err := cfg.validate.Struct(out); err != nil {
 			return oops.In("configx").
-				With("op", "validate_struct", "level", c.level).
+				With("op", "validate_struct", "level", cfg.level).
 				Wrapf(err, "validate struct")
 		}
 		return nil
@@ -53,59 +53,59 @@ func (c *Config) validateStruct(out any) error {
 }
 
 // Get retrieves related data.
-func (c *Config) Get(path string) any {
-	return c.k.Get(path)
+func (cfg *Config) Get(path string) any {
+	return cfg.k.Get(path)
 }
 
 // GetString retrieves related data.
-func (c *Config) GetString(path string) string {
-	return c.k.String(path)
+func (cfg *Config) GetString(path string) string {
+	return cfg.k.String(path)
 }
 
 // GetInt retrieves related data.
-func (c *Config) GetInt(path string) int {
-	return c.k.Int(path)
+func (cfg *Config) GetInt(path string) int {
+	return cfg.k.Int(path)
 }
 
 // GetInt64 retrieves related data.
-func (c *Config) GetInt64(path string) int64 {
-	return c.k.Int64(path)
+func (cfg *Config) GetInt64(path string) int64 {
+	return cfg.k.Int64(path)
 }
 
 // GetFloat64 retrieves related data.
-func (c *Config) GetFloat64(path string) float64 {
-	return c.k.Float64(path)
+func (cfg *Config) GetFloat64(path string) float64 {
+	return cfg.k.Float64(path)
 }
 
 // GetBool retrieves related data.
-func (c *Config) GetBool(path string) bool {
-	return c.k.Bool(path)
+func (cfg *Config) GetBool(path string) bool {
+	return cfg.k.Bool(path)
 }
 
 // GetDuration retrieves related data.
-func (c *Config) GetDuration(path string) time.Duration {
-	return c.k.Duration(path)
+func (cfg *Config) GetDuration(path string) time.Duration {
+	return cfg.k.Duration(path)
 }
 
 // GetStringSlice retrieves related data.
-func (c *Config) GetStringSlice(path string) []string {
-	return slices.Clone(c.k.Strings(path))
+func (cfg *Config) GetStringSlice(path string) []string {
+	return slices.Clone(cfg.k.Strings(path))
 }
 
 // GetIntSlice retrieves related data.
-func (c *Config) GetIntSlice(path string) []int {
-	return slices.Clone(c.k.Ints(path))
+func (cfg *Config) GetIntSlice(path string) []int {
+	return slices.Clone(cfg.k.Ints(path))
 }
 
 // Unmarshal documents related behavior.
 // path documents related behavior.
-func (c *Config) Unmarshal(path string, out any) error {
-	if c == nil {
+func (cfg *Config) Unmarshal(path string, out any) error {
+	if cfg == nil {
 		return oops.In("configx").
 			With("op", "unmarshal", "path", path).
 			Wrapf(errNilConfig, "validate config")
 	}
-	if err := c.k.Unmarshal(path, out); err != nil {
+	if err := cfg.k.Unmarshal(path, out); err != nil {
 		return oops.In("configx").
 			With("op", "unmarshal", "path", path).
 			Wrapf(errors.Join(ErrUnmarshal, err), "unmarshal config path")
@@ -115,18 +115,18 @@ func (c *Config) Unmarshal(path string, out any) error {
 
 // UnmarshalWithValidate documents related behavior.
 // path documents related behavior.
-func (c *Config) UnmarshalWithValidate(path string, out any) error {
-	if c == nil {
+func (cfg *Config) UnmarshalWithValidate(path string, out any) error {
+	if cfg == nil {
 		return oops.In("configx").
 			With("op", "unmarshal_with_validate", "path", path).
 			Wrapf(errNilConfig, "validate config")
 	}
-	if err := c.k.Unmarshal(path, out); err != nil {
+	if err := cfg.k.Unmarshal(path, out); err != nil {
 		return oops.In("configx").
 			With("op", "unmarshal_with_validate", "path", path).
 			Wrapf(errors.Join(ErrUnmarshal, err), "unmarshal config path")
 	}
-	if err := c.validateStruct(out); err != nil {
+	if err := cfg.validateStruct(out); err != nil {
 		return oops.In("configx").
 			With("op", "unmarshal_with_validate", "path", path).
 			Wrapf(errors.Join(ErrValidate, err), "validate config path")
@@ -135,23 +135,23 @@ func (c *Config) UnmarshalWithValidate(path string, out any) error {
 }
 
 // Exists checks related state.
-func (c *Config) Exists(path string) bool {
-	return c.k.Exists(path)
+func (cfg *Config) Exists(path string) bool {
+	return cfg.k.Exists(path)
 }
 
 // All retrieves related data.
-func (c *Config) All() map[string]any {
-	return maps.Clone(c.k.All())
+func (cfg *Config) All() map[string]any {
+	return maps.Clone(cfg.k.All())
 }
 
 // Validate documents related behavior.
-func (c *Config) Validate(out any) error {
-	if c == nil {
+func (cfg *Config) Validate(out any) error {
+	if cfg == nil {
 		return oops.In("configx").
 			With("op", "validate").
 			Wrapf(errNilConfig, "validate config")
 	}
-	if err := c.validateStruct(out); err != nil {
+	if err := cfg.validateStruct(out); err != nil {
 		return oops.In("configx").
 			With("op", "validate").
 			Wrapf(errors.Join(ErrValidate, err), "validate config value")
@@ -166,8 +166,8 @@ type ConfigSnapshot struct {
 }
 
 // Snapshot returns a copy-like diagnostic view of config values and sorted keys.
-func (c *Config) Snapshot() ConfigSnapshot {
-	values := c.All()
+func (cfg *Config) Snapshot() ConfigSnapshot {
+	values := cfg.All()
 	keys := slices.Sorted(maps.Keys(values))
 	return ConfigSnapshot{
 		Values: values,

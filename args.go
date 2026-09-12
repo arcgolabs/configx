@@ -14,6 +14,8 @@ type flagGetter interface {
 	Get() any
 }
 
+const schemaPathAnnotation = "configx-schema-path"
+
 type argEntry struct {
 	Name  string
 	Path  string
@@ -145,7 +147,7 @@ func changedFlagEntries(fs *pflag.FlagSet, nameFunc func(string) string) ([]argE
 			return
 		}
 
-		path, err := resolveArgsPath(flag.Name, nameFunc, "flag")
+		path, err := resolveChangedFlagPath(flag, nameFunc)
 		if err != nil {
 			visitErr = err
 			return
@@ -165,6 +167,23 @@ func changedFlagEntries(fs *pflag.FlagSet, nameFunc func(string) string) ([]argE
 		return nil, visitErr
 	}
 	return entries, nil
+}
+
+func resolveChangedFlagPath(flag *pflag.Flag, nameFunc func(string) string) (string, error) {
+	if flag != nil {
+		paths := flag.Annotations[schemaPathAnnotation]
+		if len(paths) == 1 {
+			path := normalizeArgsPath(paths[0])
+			if path != "" {
+				return path, nil
+			}
+		}
+	}
+	name := ""
+	if flag != nil {
+		name = flag.Name
+	}
+	return resolveArgsPath(name, nameFunc, "flag")
 }
 
 func applyArgEntries(values map[string]any, entries []argEntry, sourceLabel string) error {

@@ -17,4 +17,8 @@ var (
 	ErrUnsupportedFileFormat = errors.New("configx: unsupported config file format")
 	// ErrSource indicates caller-provided source failures.
 	ErrSource = errors.New("configx: source")
+	// ErrSchema indicates schema derivation or flag binding failures.
+	ErrSchema = errors.New("configx: schema")
+	// ErrSchemaFlagConflict indicates that a generated flag name is already registered.
+	ErrSchemaFlagConflict = errors.New("configx: schema flag conflict")
 )

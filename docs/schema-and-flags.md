@@ -93,7 +93,18 @@ schema fields continue to decode through `WithFlagSet`.
 Generated flags support booleans, strings, signed and unsigned integers, floats,
 `time.Duration`, values implementing `encoding.TextUnmarshaler`, pointers to those
 types, and slices of those types. Slice input uses CSV syntax; repeated slice flags
-append values.
+append values. Generated slice flags implement `pflag.SliceValue`, and their
+non-redacted string representation follows pflag's bracketed slice format. This
+allows matching native getters such as `FlagSet.GetStringSlice` to read generated
+flags without losing the first and last characters.
+
+Redacted slice flags keep returning `[REDACTED]` from `Value.String()` and return
+only redaction placeholders from `SliceValue.GetSlice()`. `configx.Load` still
+receives values explicitly supplied through the flag set.
+
+For a slice field with a custom schema parser, `Set` passes the complete raw flag
+value to the parser. `SliceValue.Append` and each item supplied to
+`SliceValue.Replace` are parsed individually before their results are combined.
 
 Maps, interfaces, arrays, complex numbers, functions, channels, and recursive
 struct graphs are rejected with `ErrSchema` instead of being silently omitted.

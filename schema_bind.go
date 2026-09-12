@@ -115,7 +115,11 @@ func bindSchemaFlag(fs *pflag.FlagSet, name string, binding schemaBinding) error
 		kind:     binding.field.Kind,
 		redacted: binding.field.Redacted,
 	}
-	fs.Var(value, name, binding.field.Usage)
+	var flagValue pflag.Value = value
+	if isSchemaSliceKind(binding.field.Kind) {
+		flagValue = &schemaSliceFlagValue{schemaFlagValue: value}
+	}
+	fs.Var(flagValue, name, binding.field.Usage)
 	flag := fs.Lookup(name)
 	if flag == nil {
 		return schemaError("registered flag cannot be found", map[string]any{"path": binding.field.Path})
@@ -150,24 +154,38 @@ type schemaFlagValue struct {
 }
 
 func (v *schemaFlagValue) Set(raw string) error {
-	parsed, err := v.parse(raw)
-	if err != nil {
-		if v.redacted {
-			return fmt.Errorf("parse %s flag", v.kind)
-		}
-		return fmt.Errorf("parse %s flag: %w", v.kind, err)
+	if err := v.assign(raw, v.set && isSchemaSliceKind(v.kind)); err != nil {
+		return err
 	}
-	reflected, err := schemaReflectValue(parsed, v.typeOf)
+	v.set = true
+	return nil
+}
+
+func (v *schemaFlagValue) assign(raw string, appendValue bool) error {
+	reflected, err := v.parseReflect(raw)
 	if err != nil {
 		return err
 	}
-	if v.set && v.typeOf.Kind() == reflect.Slice {
-		current := reflect.ValueOf(v.current)
-		reflected = reflect.AppendSlice(current, reflected)
+	if appendValue {
+		reflected = appendSchemaSliceValues(v.current, reflected, v.typeOf)
 	}
 	v.current = reflected.Interface()
-	v.set = true
 	return nil
+}
+
+func (v *schemaFlagValue) parseReflect(raw string) (reflect.Value, error) {
+	parsed, err := v.parse(raw)
+	if err != nil {
+		if v.redacted {
+			return reflect.Value{}, fmt.Errorf("parse %s flag", v.kind)
+		}
+		return reflect.Value{}, fmt.Errorf("parse %s flag: %w", v.kind, err)
+	}
+	reflected, err := schemaReflectValue(parsed, v.typeOf)
+	if err != nil {
+		return reflect.Value{}, err
+	}
+	return reflected, nil
 }
 
 func (v *schemaFlagValue) String() string {
